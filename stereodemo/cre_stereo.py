@@ -60,7 +60,7 @@ class CREStereo(StereoMethod):
         self.parameters.update ({
             "Iterations": EnumParameter("Number of iterations", 1, ["2", "5", "10", "20"]),
             "Mode": EnumParameter("Number of passes. The combined version does 2 passes, one to get an initial estimation and a second one to refine it.",
-                                  0, ["init", "combined"]),
+                                  1, ["init", "combined"]),
             "Shape": EnumParameter("Processed image size", 0, ["320x240", "640x480", "1280x720"])            
         })
 

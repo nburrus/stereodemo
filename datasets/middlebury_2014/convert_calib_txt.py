@@ -49,7 +49,7 @@ print (K0)
 K1 = parse_numpy_array(fields['cam1'])
 print (K1)
 
-assert np.all(K0 == K1)
+assert np.count_nonzero(K0 != K1) <= 1 # only cx can differ
 
 calib = Calibration(int(fields['width']), int(fields['height']), K0[0,0], K0[1,1], K0[0,2], K1[0,2], K0[1,2], float(fields['baseline'])*1e-3)
 print (calib)

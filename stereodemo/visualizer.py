@@ -1,3 +1,4 @@
+import copy
 import time
 from typing import Dict, List, Tuple
 import json
@@ -49,6 +50,7 @@ class Visualizer:
         self.stereo_methods = stereo_methods
         self.stereo_methods_output = {}
         self.input = InputPair (None, None, None, None)
+        self._downsample_factor = 0
 
         self._clear_outputs ()
 
@@ -58,10 +60,11 @@ class Visualizer:
         self.settings = Settings()
 
         # 3D widget
-        self._scene = gui.SceneWidget()
+        self._scene = gui.SceneWidget()        
         self._scene.scene = rendering.Open3DScene(w.renderer)
         # self._scene.scene.show_ground_plane(True, rendering.Scene.GroundPlane.XZ)
         self._scene.set_view_controls(gui.SceneWidget.Controls.ROTATE_CAMERA)
+        self._scene.set_on_key(self._on_key_pressed)
 
         for name, o in self.stereo_methods_output.items():
             if o.point_cloud is not None:
@@ -76,6 +79,18 @@ class Visualizer:
         self._next_image_button = gui.Button("Next Image")
         self._next_image_button.set_on_clicked(self._next_image_clicked)
         self._settings_panel.add_child(self._next_image_button)
+        
+        horiz = gui.Horiz(0, gui.Margins(0.25 * em, 0.25 * em, 0.25 * em, 0.25 * em))
+        label = gui.Label("Input downsampling")
+        label.tooltip = "Number of /2 downsampling steps to apply on the input"
+        horiz.add_child(label)
+        downsample_slider = gui.Slider(gui.Slider.INT)
+        downsample_slider.set_limits(0, 4)
+        downsample_slider.int_value = self._downsample_factor
+        downsample_slider.set_on_value_changed(self._downsampling_changed)
+        horiz.add_child(downsample_slider)
+        self._settings_panel.add_child(horiz)
+
         self._settings_panel.add_fixed(self.separation_height)
 
         self.algo_list = gui.ListView()
@@ -113,11 +128,40 @@ class Visualizer:
 
         self.read_next_pair ()
 
+    def _on_key_pressed (self, keyEvent):
+        if keyEvent.key == gui.KeyName.Q:
+            self.vis.quit()
+            return gui.SceneWidget.EventCallbackResult.HANDLED
+        return gui.SceneWidget.EventCallbackResult.IGNORED
+    
+    def _downsampling_changed(self, v):
+        self._downsample_factor = int(v)
+        self._process_input (self.full_res_input)
+
+    def _downsample_input (self, input: InputPair):
+        for i in range(0, self._downsample_factor):
+            if np.max(input.left_image.shape[:2]) < 250:
+                break
+            input.left_image = cv2.pyrDown(input.left_image)
+            input.right_image = cv2.pyrDown(input.right_image)
+            if input.input_disparity:
+                input.input_disparity = cv2.pyrDown(input.input_disparity)
+            input.calibration.downsample(input.left_image.shape[1], input.left_image.shape[0])
+
     def read_next_pair (self):
         input = self.source.get_next_pair ()
+        self._process_input (input)
+
+    def _process_input (self, input):
+        if self._downsample_factor > 0:
+            self.full_res_input = input
+            input = copy.deepcopy(input)
+            self._downsample_input (input)
+        else:
+            self.full_res_input = input
         cv2.imshow ("Input image", np.hstack([input.left_image, input.right_image]))
         self.input = input
-        self.input_status.text = input.status
+        self.input_status.text = f"{input.left_image.shape[1]}x{input.left_image.shape[0]} " + input.status
 
         if self.input.has_data():
             assert self.input.left_image.shape[1] == self.input.calibration.width and self.input.left_image.shape[0] == self.input.calibration.height
@@ -125,7 +169,7 @@ class Visualizer:
                                                                         height=self.input.left_image.shape[0],
                                                                         fx=self.input.calibration.fx,
                                                                         fy=self.input.calibration.fy,
-                                                                        cx=self.input.calibration.cx,
+                                                                        cx=self.input.calibration.cx0,
                                                                         cy=self.input.calibration.cy)
 
             self._clear_outputs ()
@@ -140,7 +184,7 @@ class Visualizer:
         for name in self.stereo_methods.keys():
             self.stereo_methods_output[name] = StereoOutput(
                 disparity_pixels=None,
-                color_image=None,
+                color_image_bgr=None,
                 computation_time=np.nan)
 
     def _reset_camera (self):
@@ -208,7 +252,7 @@ class Visualizer:
                 container.add_child(horiz)
             
         horiz = gui.Horiz(0, gui.Margins(0.25 * em, 0.25 * em, 0.25 * em, 0.25 * em))        
-        apply_button = gui.Button("Run")
+        apply_button = gui.Button("Apply")
         apply_button.horizontal_padding_em = 3
         apply_button.set_on_clicked(self._run_current_method)
         horiz.add_child(apply_button)
@@ -272,7 +316,7 @@ class Visualizer:
         if self._scene.scene.has_geometry(name):
             self._scene.scene.remove_geometry(name)
 
-        o3d_color = o3d.geometry.Image(stereo_output.color_image)
+        o3d_color = o3d.geometry.Image(cv2.cvtColor(stereo_output.color_image_bgr, cv2.COLOR_BGR2RGB))
         o3d_depth = o3d.geometry.Image(depth_meters)
         rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(o3d_color,
                                                                   o3d_depth,

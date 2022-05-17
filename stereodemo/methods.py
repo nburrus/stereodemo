@@ -16,7 +16,8 @@ class Calibration:
     height: int
     fx: float
     fy: float
-    cx: float
+    cx0: float # cx is the only one that can differ between both cameras.
+    cx1: float
     cy: float
     baseline_meters: float
 
@@ -26,6 +27,17 @@ class Calibration:
     def from_json(json_str):
         d = json.loads(json_str)
         return Calibration(**d)
+
+    def downsample(self, new_width: int, new_height: int):
+        sx = new_width / self.width
+        sy = new_height / self.height
+        self.width = new_width
+        self.height = new_height
+        self.fx *= sx
+        self.fy *= sy
+        self.cx0 *= sx
+        self.cx1 *= sx
+        self.cy *= sy
 
 @dataclass
 class InputPair:
@@ -41,7 +53,7 @@ class InputPair:
 @dataclass
 class StereoOutput:
     disparity_pixels: np.ndarray
-    color_image: np.ndarray
+    color_image_bgr: np.ndarray
     computation_time: float
     point_cloud: Any = None
 
@@ -94,9 +106,11 @@ class StereoMethod:
 
     def depth_meters_from_disparity(disparity_pixels: np.ndarray, calibration: Calibration):
         old_seterr = np.seterr(divide='ignore')
-        depth_meters = np.float32(calibration.baseline_meters * calibration.fx) / disparity_pixels
+        dcx = (calibration.cx0 - calibration.cx1)
+        depth_meters = np.float32(calibration.baseline_meters * calibration.fx) / (disparity_pixels - dcx)
         depth_meters = np.nan_to_num(depth_meters)
         depth_meters = np.clip (depth_meters, -1.0, 10.0)
+        depth_meters[disparity_pixels < 0.] = -1.0
         np.seterr(**old_seterr)
         return depth_meters
 
@@ -111,7 +125,7 @@ class StereoBMMethod(StereoMethod):
         # For more details:
         # https://learnopencv.com/depth-perception-using-stereo-camera-python-c/
         self.parameters.update ({
-            "Num Disparities": IntParameter("Number of disparities (pixels)", 128, 16, 256, to_valid=multiple_of_16),
+            "Num Disparities": IntParameter("Number of disparities (pixels)", 128, 16, 640, to_valid=multiple_of_16),
             "Block Size": IntParameter("Kernel size for block matching (odd)", 9, 3, 63, to_valid=odd_only),
             "TextureThreshold": IntParameter("Minimum SAD to consider the texture sufficient", 10, 0, 100),
             "Uniqueness Ratio": IntParameter("How unique the match each for each pixel", 15, 0, 100),
@@ -154,7 +168,7 @@ class StereoSGBMMethod(StereoMethod):
         # For more details:
         # https://learnopencv.com/depth-perception-using-stereo-camera-python-c/
         self.parameters.update ({
-            "Num Disparities": IntParameter("Number of disparities (pixels)", 128, 2, 256),
+            "Num Disparities": IntParameter("Number of disparities (pixels)", 128, 2, 640),
             "Block Size": IntParameter("Kernel size for block matching (odd)", 3, 3, 63, to_valid=odd_only),
             
             "Mode": EnumParameter("Set it to StereoSGBM::MODE_HH to run the full-scale two-pass dynamic programming algorithm. It will consume O(W*H*numDisparities) bytes, which is large for 640x480 stereo and huge for HD-size pictures. By default, it is set to false .",

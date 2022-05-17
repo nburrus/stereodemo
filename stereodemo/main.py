@@ -28,6 +28,7 @@ def parse_args():
 
 class FileListSource (visualizer.Source):
     def __init__(self, file_list, calibration=None):
+        # You must provide left images, and then right images.
         assert len(file_list) % 2 == 0
         N = len(file_list) // 2
         self.left_images_path = file_list[:N]
@@ -59,7 +60,8 @@ class FileListSource (visualizer.Source):
                                            left_image.shape[0],
                                            left_image.shape[0]*0.8,
                                            left_image.shape[0]*0.8,
-                                           left_image.shape[1]/2.0,
+                                           left_image.shape[1]/2.0, # cx0
+                                           left_image.shape[1]/2.0, # cx1
                                            left_image.shape[0]/2.0,
                                            0.075)
             
