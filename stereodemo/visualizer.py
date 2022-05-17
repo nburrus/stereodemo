@@ -86,7 +86,7 @@ class Visualizer:
 
         self._clear_outputs ()
 
-        self.window = gui.Application.instance.create_window("Stereo Demo", 1024, 768)
+        self.window = gui.Application.instance.create_window("Stereo Demo", 1280, 1024)
         w = self.window  # to make the code more concise
 
         self.settings = Settings()
@@ -98,7 +98,8 @@ class Visualizer:
         self._scene.set_view_controls(gui.SceneWidget.Controls.ROTATE_CAMERA)
 
         for name, o in self.stereo_methods_output.items():
-            self._scene.scene.add_geometry(name, o.point_cloud, rendering.MaterialRecord())
+            if o.point_cloud is not None:
+                self._scene.scene.add_geometry(name, o.point_cloud, rendering.MaterialRecord())
 
         self._reset_camera()
 
@@ -174,7 +175,7 @@ class Visualizer:
             self.stereo_methods_output[name] = MethodOutput(
                 disparity_pixels=None,
                 computation_time=np.nan,
-                point_cloud = o3d.t.geometry.PointCloud()
+                point_cloud = None
             )
 
     def _reset_camera (self):
@@ -308,6 +309,9 @@ class Visualizer:
         depth_meters = np.clip (depth_meters, -1.0, 10.0)
         np.seterr(**old_seterr)
 
+        if output.point_cloud is not None:
+            self._scene.scene.remove_geometry(name)
+
         o3d_left = o3d.geometry.Image(self.input.left_image)
         o3d_depth = o3d.geometry.Image(depth_meters)
         rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(o3d_left,
@@ -317,7 +321,6 @@ class Visualizer:
                                                                   convert_rgb_to_intensity=False)
         output.point_cloud = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.o3dCameraIntrinsic)
         output.point_cloud.transform([[1,0,0,0],[0,-1,0,0],[0,0,-1,0],[0,0,0,1]])
-        self._scene.scene.remove_geometry(name)
         self._scene.scene.add_geometry(name, output.point_cloud, rendering.MaterialRecord())
 
         output.disparity_pixels = disparity
