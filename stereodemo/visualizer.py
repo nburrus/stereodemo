@@ -144,7 +144,7 @@ class Visualizer:
                 break
             input.left_image = cv2.pyrDown(input.left_image)
             input.right_image = cv2.pyrDown(input.right_image)
-            if input.input_disparity:
+            if input.input_disparity is not None:
                 input.input_disparity = cv2.pyrDown(input.input_disparity)
             input.calibration.downsample(input.left_image.shape[1], input.left_image.shape[0])
 

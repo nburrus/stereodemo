@@ -22,14 +22,14 @@
             //     "datasets/eth3d_lowres/delivery_area_1l/im0.png",
             //     "datasets/eth3d_lowres/delivery_area_1l/im1.png",
             // ]
-            // "args": [
-            //     "--oak",
-            // ]
             "args": [
-                "--images", 
-                "datasets/middlebury_2014/Piano-perfect/im0.png",
-                "datasets/middlebury_2014/Piano-perfect/im1.png",
+                "--oak",
             ]
+            // "args": [
+            //     "--images", 
+            //     "datasets/middlebury_2014/Piano-perfect/im0.png",
+            //     "datasets/middlebury_2014/Piano-perfect/im1.png",
+            // ]
         }
 
     ]

@@ -85,7 +85,8 @@ class OakdSource (visualizer.Source):
         self.calibration = visualizer.Calibration(w, h,
                                                   fx=disparityIntrinsics[0][0],
                                                   fy=disparityIntrinsics[1][1],
-                                                  cx=disparityIntrinsics[0][2],
+                                                  cx0=disparityIntrinsics[0][2],
+                                                  cx1=disparityIntrinsics[0][2],
                                                   cy=disparityIntrinsics[1][2],
                                                   baseline_meters=baselineMeters)
 

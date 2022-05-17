@@ -106,7 +106,7 @@ class StereoMethod:
 
     def depth_meters_from_disparity(disparity_pixels: np.ndarray, calibration: Calibration):
         old_seterr = np.seterr(divide='ignore')
-        dcx = (calibration.cx0 - calibration.cx1)
+        dcx = np.float32(calibration.cx0 - calibration.cx1)
         depth_meters = np.float32(calibration.baseline_meters * calibration.fx) / (disparity_pixels - dcx)
         depth_meters = np.nan_to_num(depth_meters)
         depth_meters = np.clip (depth_meters, -1.0, 10.0)
