@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import time
 from types import SimpleNamespace
+
 import numpy as np
 
 import cv2
@@ -68,9 +69,14 @@ def main():
     viz = visualizer.Visualizer(method_dict, source)
 
     while True:
+        start_time = time.time()
         if not viz.update_once ():
             break
-        time.sleep (1/30.0)
         cv2.waitKey (1)
+        elapsed = time.time() - start_time
+        time_to_sleep = 1/30.0 - elapsed
+        if time_to_sleep > 0:
+            time.sleep (time_to_sleep)
 
 main()
+

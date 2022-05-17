@@ -3,6 +3,7 @@ from typing import Dict, List, Tuple
 import json
 from dataclasses import dataclass
 from abc import abstractmethod
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 import cv2
@@ -73,6 +74,11 @@ class Visualizer:
 
         self.vis = gui.Application.instance
         self.source = source
+
+        self.executor = ThreadPoolExecutor(max_workers=1)
+        self.executor_future = None
+        self._progress_dialog = None
+        self._last_progress_update_time = None
 
         self.stereo_methods = stereo_methods
         self.stereo_methods_output = {}
@@ -159,6 +165,8 @@ class Visualizer:
             self._run_current_method ()
 
     def update_once (self):
+        if self.executor_future is not None:
+            self._check_run_complete()
         return gui.Application.instance.run_one_tick()
 
     def _clear_outputs (self):
@@ -272,24 +280,33 @@ class Visualizer:
         for m in self._reload_settings_functions:
             m()
 
-    def _run_current_method(self):
-        # self.window.show_message_box ("Please wait.", "Computing...")
-
-        if not self.input.has_data():
+    def _check_run_complete(self):                
+        if not self.executor_future.done():
+            if self._progress_dialog is None:
+                self._progress_dialog = self._show_progress_dialog("Running the current method", f"Computing {self.algo_list.selected_value}...")
+            now = time.time()
+            if (now - self._last_progress_update_time > 0.1):
+                self._last_progress_update_time = now
+                self._run_progress.value += (1.0 - self._run_progress.value) / 16.0
             return
+
+        if self._progress_dialog:
+            self.window.close_dialog ()
+        self._progress_dialog = None
+
+        disparity, computation_time = self.executor_future.result()
+        self.executor_future = None
+
         name = self.algo_list.selected_value
+        show_color_disparity (name, disparity)
 
         output = self.stereo_methods_output[name]
-
-        disparity, computation_time = self.stereo_methods[name].compute_disparity (self.input.left_image, self.input.right_image)
-        show_color_disparity (name, disparity)
 
         old_seterr = np.seterr(divide='ignore')
         depth_meters = np.float32(self.input.calibration.baseline_meters * self.input.calibration.fx) / disparity
         depth_meters = np.nan_to_num(depth_meters)
         depth_meters = np.clip (depth_meters, -1.0, 10.0)
         np.seterr(**old_seterr)
-
 
         o3d_left = o3d.geometry.Image(self.input.left_image)
         o3d_depth = o3d.geometry.Image(depth_meters)
@@ -305,10 +322,46 @@ class Visualizer:
 
         output.disparity_pixels = disparity
         output.computation_time = computation_time
-        self._update_method_output (name)
-
-        # self.window.close_dialog ()
+        self._update_method_output (name)        
     
+    def _run_current_method(self):
+        if self.executor_future is not None:
+            return self._check_run_complete ()
+
+        if not self.input.has_data():
+            return
+
+        name = self.algo_list.selected_value
+
+        def do_beefy_work():
+            disparity, computation_time = self.stereo_methods[name].compute_disparity (self.input.left_image, self.input.right_image)
+            return disparity, computation_time
+
+        self._last_progress_update_time = time.time()
+        self.executor_future = self.executor.submit (do_beefy_work)
+    
+    def _show_progress_dialog(self, title, message):
+        # A Dialog is just a widget, so you make its child a layout just like
+        # a Window.
+        dlg = gui.Dialog(title)
+
+        # Add the message text
+        em = self.window.theme.font_size
+        dlg_layout = gui.Vert(em, gui.Margins(em, em, em, em))
+        dlg_layout.add_child(gui.Label(message))
+
+        # Add the Ok button. We need to define a callback function to handle
+        # the click.
+        self._run_progress = gui.ProgressBar()
+        self._run_progress.value = 0.1  # 10% complete
+        prog_layout = gui.Horiz(em)
+        prog_layout.add_child(self._run_progress)
+        dlg_layout.add_child(prog_layout)
+
+        dlg.add_child(dlg_layout)
+        self.window.show_dialog(dlg)
+        return dlg
+
     def _update_method_output (self, name):
         output = self.stereo_methods_output[name]
         if np.isnan(output.computation_time):
