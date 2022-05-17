@@ -10,10 +10,17 @@
             "request": "launch",
             "module": "stereodemo",
             "justMyCode": false,
+            // "args": [
+            //     "--images", 
+            //     "mess/img_000_left.png",
+            //     "mess/img_001_left.png",
+            //     "mess/img_000_right.png"
+            //     "mess/img_001_right.png"
+            // ]
             "args": [
-                "mess/img_001_left.png",
-                "mess/img_001_right.png"
-                "mess/oak-calibration.json",
+                "--images", 
+                "datasets/eth3d_lowres/delivery_area_1l/im0.png",
+                "datasets/eth3d_lowres/delivery_area_1l/im1.png",
             ]
         }
     ]

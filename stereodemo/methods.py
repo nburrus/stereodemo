@@ -3,7 +3,8 @@
 from abc import abstractmethod
 from dataclasses import dataclass
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
+import time
 
 import numpy as np
 import cv2
@@ -28,6 +29,10 @@ class EnumParameter:
     def set_index (self, idx: int):
         self.index = idx
 
+    @property
+    def value(self) -> str:
+        return self.values[self.index]
+
 def odd_only(x):
     return x if x % 2 == 1 else x+1
 
@@ -44,8 +49,8 @@ class StereoMethod:
         pass
 
     @abstractmethod    
-    def compute_disparity(self, left_image: np.ndarray, right_image: np.ndarray) -> np.ndarray:
-        """Return the disparity map in pixels.
+    def compute_disparity(self, left_image: np.ndarray, right_image: np.ndarray) -> Tuple[np.ndarray, float]:
+        """Return the disparity map in pixels and the actual computation time.
         
         Both input images are assumed to be rectified.
         """
@@ -90,8 +95,9 @@ class StereoBMMethod(StereoMethod):
         gray_left = cv2.cvtColor(left_image, cv2.COLOR_BGR2GRAY, left_image)
         gray_right = cv2.cvtColor(right_image, cv2.COLOR_BGR2GRAY, right_image)
         # OpenCV returns 16x the disparity in pixels
+        start = time.time()
         disparity = stereoBM.compute(gray_left, gray_right) / np.float32(16.0)
-        return disparity
+        return disparity, time.time()-start
 
 class StereoSGBMMethod(StereoMethod):
     def __init__(self):
@@ -137,5 +143,6 @@ class StereoSGBMMethod(StereoMethod):
         gray_left = cv2.cvtColor(left_image, cv2.COLOR_BGR2GRAY, left_image)
         gray_right = cv2.cvtColor(right_image, cv2.COLOR_BGR2GRAY, right_image)
         # OpenCV returns 16x the disparity in pixels
+        start = time.time()
         disparity = stereoSGBM.compute(gray_left, gray_right) / np.float32(16.0)
-        return disparity
+        return disparity, time.time()-start

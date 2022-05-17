@@ -1,7 +1,6 @@
-from dis import dis
 import time
-from typing import Dict, List
-
+from typing import Dict, List, Tuple
+import json
 from dataclasses import dataclass
 from abc import abstractmethod
 
@@ -16,13 +15,20 @@ from .methods import IntParameter, EnumParameter, StereoMethod
 
 @dataclass
 class Calibration:
-   width: int
-   height: int
-   fx: float
-   fy: float
-   cx: float
-   cy: float
-   baseline_meters: float
+    width: int
+    height: int
+    fx: float
+    fy: float
+    cx: float
+    cy: float
+    baseline_meters: float
+
+    def to_json(self):
+        return json.dumps(self.__dict__)
+
+    def from_json(json_str):
+        d = json.loads(json_str)
+        return Calibration(**d)
 
 @dataclass
 class MethodOutput:
@@ -33,7 +39,7 @@ class MethodOutput:
 
 def show_color_disparity (name: str, disparity_map: np.ndarray):
     min_disp = 0
-    max_disp = disparity_map.shape[1] // 2
+    max_disp = 64
     norm_disparity_map = 255*((disparity_map-min_disp) / (max_disp-min_disp))
     disparity_color = cv2.applyColorMap(cv2.convertScaleAbs(norm_disparity_map, 1), cv2.COLORMAP_MAGMA)
     cv2.imshow (name, disparity_color)
@@ -42,15 +48,35 @@ class Settings:
     def __init__(self):
         self.show_axes = False
 
+@dataclass
+class InputPair:
+    left_image: np.ndarray
+    right_image: np.ndarray
+    calibration: Calibration
+    status: str
+
+    def has_data(self):
+        return self.left_image is not None
+
+class Source:
+    def __init__(self):
+        pass
+
+    @abstractmethod
+    def get_next_pair(self) -> InputPair:
+        return InputPair(None, None, None, None)
+
+
 class Visualizer:
-    def __init__(self, stereo_methods: Dict[str, StereoMethod]):
+    def __init__(self, stereo_methods: Dict[str, StereoMethod], source: Source):
         gui.Application.instance.initialize()
 
         self.vis = gui.Application.instance
+        self.source = source
 
         self.stereo_methods = stereo_methods
         self.stereo_methods_output = {}
-        self.set_input (None, None, None)
+        self.input = InputPair (None, None, None, None)
 
         self._clear_outputs ()
 
@@ -92,6 +118,9 @@ class Visualizer:
         self.last_runtime = gui.Label("")
         self._settings_panel.add_child (self.last_runtime)
 
+        self.input_status = gui.Label("No input.")
+        self._settings_panel.add_child (self.input_status)
+
         view_ctrls = gui.CollapsableVert("View controls", 0.25 * em, gui.Margins(em, 0, 0, 0))
         reset_cam_button = gui.Button("Reset Camera")
         reset_cam_button.set_on_clicked(self._reset_camera)
@@ -109,17 +138,22 @@ class Visualizer:
         self._on_algo_list_selected(self.algo_list.selected_value, False)
         self._apply_settings()
 
-    def set_input (self, left_image: np.ndarray, right_image: np.ndarray, calibration: Calibration) -> None:
-        self.left_image = left_image
-        self.right_image = right_image
-        self.calibration = calibration
-        if left_image is not None:
-            self.o3dCameraIntrinsic = o3d.camera.PinholeCameraIntrinsic(width=left_image.shape[1],
-                                                                        height=left_image.shape[0],
-                                                                        fx=self.calibration.fx,
-                                                                        fy=self.calibration.fy,
-                                                                        cx=self.calibration.cx,
-                                                                        cy=self.calibration.cy)
+        self.read_next_pair ()
+
+    def read_next_pair (self):
+        input = self.source.get_next_pair ()
+        cv2.imshow ("Input image", np.hstack([input.left_image, input.right_image]))
+        self.input = input
+        self.input_status.text = input.status
+
+        if self.input.has_data():
+            assert self.input.left_image.shape[1] == self.input.calibration.width and self.input.left_image.shape[0] == self.input.calibration.height
+            self.o3dCameraIntrinsic = o3d.camera.PinholeCameraIntrinsic(width=self.input.left_image.shape[1],
+                                                                        height=self.input.left_image.shape[0],
+                                                                        fx=self.input.calibration.fx,
+                                                                        fy=self.input.calibration.fy,
+                                                                        cx=self.input.calibration.cx,
+                                                                        cy=self.input.calibration.cy)
 
             self._clear_outputs ()
             self._run_current_method ()
@@ -170,7 +204,6 @@ class Visualizer:
                 slider.set_limits(param.min, param.max)
                 slider.int_value = param.value
                 def set_value_from_method(slider=slider, method=method, name=name):
-                    print (f"Setting value of {slider} to {method.parameters[name].value}")
                     slider.int_value = method.parameters[name].value
                 self._reload_settings_functions.append(set_value_from_method)
                 # workaround late binding
@@ -213,8 +246,6 @@ class Visualizer:
         return container
 
     def _on_algo_list_selected(self, name: str, is_dbl_click: bool):
-        # self.method_params_proxy
-        print ("Selected ", self.stereo_methods[name])
         self.method_params_proxy.set_widget(self._build_stereo_method_widgets(name))
         self._update_method_output (name)
         for other_name in self.stereo_methods_output.keys():
@@ -229,7 +260,7 @@ class Visualizer:
         self._apply_settings()
 
     def _next_image_clicked(self):
-        print ("next image clicked!")
+        self.read_next_pair ()
 
     def _apply_settings(self):
         self._scene.scene.show_axes(self.settings.show_axes)
@@ -242,23 +273,25 @@ class Visualizer:
             m()
 
     def _run_current_method(self):
-        if self.left_image is None:
+        # self.window.show_message_box ("Please wait.", "Computing...")
+
+        if not self.input.has_data():
             return
         name = self.algo_list.selected_value
 
         output = self.stereo_methods_output[name]
 
-        tstart = time.time()
-        disparity = self.stereo_methods[name].compute_disparity (self.left_image, self.right_image)
+        disparity, computation_time = self.stereo_methods[name].compute_disparity (self.input.left_image, self.input.right_image)
         show_color_disparity (name, disparity)
-        tend = time.time()
 
-        depth_meters = np.float32(self.calibration.baseline_meters * self.calibration.fx) / disparity
+        old_seterr = np.seterr(divide='ignore')
+        depth_meters = np.float32(self.input.calibration.baseline_meters * self.input.calibration.fx) / disparity
         depth_meters = np.nan_to_num(depth_meters)
         depth_meters = np.clip (depth_meters, -1.0, 10.0)
+        np.seterr(**old_seterr)
 
 
-        o3d_left = o3d.geometry.Image(self.left_image)
+        o3d_left = o3d.geometry.Image(self.input.left_image)
         o3d_depth = o3d.geometry.Image(depth_meters)
         rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(o3d_left,
                                                                   o3d_depth,
@@ -270,10 +303,11 @@ class Visualizer:
         self._scene.scene.remove_geometry(name)
         self._scene.scene.add_geometry(name, output.point_cloud, rendering.MaterialRecord())
 
-        computation_time=(tend - tstart)
         output.disparity_pixels = disparity
         output.computation_time = computation_time
         self._update_method_output (name)
+
+        # self.window.close_dialog ()
     
     def _update_method_output (self, name):
         output = self.stereo_methods_output[name]
