@@ -5,9 +5,45 @@ from dataclasses import dataclass
 
 from typing import Any, Dict, List, Tuple
 import time
+import json
 
 import numpy as np
 import cv2
+
+@dataclass
+class Calibration:
+    width: int
+    height: int
+    fx: float
+    fy: float
+    cx: float
+    cy: float
+    baseline_meters: float
+
+    def to_json(self):
+        return json.dumps(self.__dict__)
+
+    def from_json(json_str):
+        d = json.loads(json_str)
+        return Calibration(**d)
+
+@dataclass
+class InputPair:
+    left_image: np.ndarray
+    right_image: np.ndarray
+    calibration: Calibration
+    status: str
+    input_disparity: np.ndarray = None
+
+    def has_data(self):
+        return self.left_image is not None
+
+@dataclass
+class StereoOutput:
+    disparity_pixels: np.ndarray
+    color_image: np.ndarray
+    computation_time: float
+    point_cloud: Any = None
 
 @dataclass
 class IntParameter:
@@ -49,12 +85,20 @@ class StereoMethod:
         pass
 
     @abstractmethod    
-    def compute_disparity(self, left_image: np.ndarray, right_image: np.ndarray) -> Tuple[np.ndarray, float]:
+    def compute_disparity(self, input: InputPair) -> StereoOutput:
         """Return the disparity map in pixels and the actual computation time.
         
         Both input images are assumed to be rectified.
         """
-        pass
+        return StereoOutput(None, None, None, None)
+
+    def depth_meters_from_disparity(disparity_pixels: np.ndarray, calibration: Calibration):
+        old_seterr = np.seterr(divide='ignore')
+        depth_meters = np.float32(calibration.baseline_meters * calibration.fx) / disparity_pixels
+        depth_meters = np.nan_to_num(depth_meters)
+        depth_meters = np.clip (depth_meters, -1.0, 10.0)
+        np.seterr(**old_seterr)
+        return depth_meters
 
 # Default parameters taken from 
 # https://github.com/opencv/opencv/blob/4.x/samples/cpp/stereo_match.cpp
@@ -67,7 +111,7 @@ class StereoBMMethod(StereoMethod):
         # For more details:
         # https://learnopencv.com/depth-perception-using-stereo-camera-python-c/
         self.parameters.update ({
-            "Num Disparities": IntParameter("Number of disparities (pixels)", 64, 16, 256, to_valid=multiple_of_16),
+            "Num Disparities": IntParameter("Number of disparities (pixels)", 128, 16, 256, to_valid=multiple_of_16),
             "Block Size": IntParameter("Kernel size for block matching (odd)", 9, 3, 63, to_valid=odd_only),
             "TextureThreshold": IntParameter("Minimum SAD to consider the texture sufficient", 10, 0, 100),
             "Uniqueness Ratio": IntParameter("How unique the match each for each pixel", 15, 0, 100),
@@ -78,7 +122,8 @@ class StereoBMMethod(StereoMethod):
             "PreFilterSize": IntParameter("Pre-filter size (odd)", 9, 5, 255, to_valid=odd_only),
         })
 
-    def compute_disparity(self, left_image: np.ndarray, right_image: np.ndarray) -> np.ndarray:
+    def compute_disparity(self, input: InputPair) -> StereoOutput:
+        left_image, right_image = input.left_image, input.right_image
         block_size = self.parameters['Block Size'].value
         if block_size % 2 == 0:
             block_size += 1
@@ -97,7 +142,7 @@ class StereoBMMethod(StereoMethod):
         # OpenCV returns 16x the disparity in pixels
         start = time.time()
         disparity = stereoBM.compute(gray_left, gray_right) / np.float32(16.0)
-        return disparity, time.time()-start
+        return StereoOutput(disparity, input.left_image, time.time()-start)
 
 class StereoSGBMMethod(StereoMethod):
     def __init__(self):
@@ -109,7 +154,7 @@ class StereoSGBMMethod(StereoMethod):
         # For more details:
         # https://learnopencv.com/depth-perception-using-stereo-camera-python-c/
         self.parameters.update ({
-            "Num Disparities": IntParameter("Number of disparities (pixels)", 64, 2, 256),
+            "Num Disparities": IntParameter("Number of disparities (pixels)", 128, 2, 256),
             "Block Size": IntParameter("Kernel size for block matching (odd)", 3, 3, 63, to_valid=odd_only),
             
             "Mode": EnumParameter("Set it to StereoSGBM::MODE_HH to run the full-scale two-pass dynamic programming algorithm. It will consume O(W*H*numDisparities) bytes, which is large for 640x480 stereo and huge for HD-size pictures. By default, it is set to false .",
@@ -127,7 +172,8 @@ class StereoSGBMMethod(StereoMethod):
             "PreFilterCap": IntParameter("Max pre-filter output", 63, 1, 128),
         })
 
-    def compute_disparity(self, left_image: np.ndarray, right_image: np.ndarray) -> np.ndarray:
+    def compute_disparity(self, input: InputPair) -> StereoOutput:
+        left_image, right_image = input.left_image, input.right_image
         stereoSGBM = cv2.StereoSGBM_create(numDisparities=self.parameters['Num Disparities'].value, 
                                          blockSize=self.parameters['Block Size'].value)
 
@@ -145,4 +191,4 @@ class StereoSGBMMethod(StereoMethod):
         # OpenCV returns 16x the disparity in pixels
         start = time.time()
         disparity = stereoSGBM.compute(gray_left, gray_right) / np.float32(16.0)
-        return disparity, time.time()-start
+        return StereoOutput(disparity, input.left_image, time.time()-start)

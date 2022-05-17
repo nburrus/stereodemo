@@ -10,7 +10,7 @@ import cv2
 import numpy as np
 import onnxruntime
 
-from .methods import EnumParameter, StereoMethod
+from .methods import EnumParameter, StereoMethod, InputPair, StereoOutput
 
 models_path = Path(__file__).parent.parent / 'models'
 
@@ -64,7 +64,8 @@ class CREStereo(StereoMethod):
             "Shape": EnumParameter("Processed image size", 0, ["320x240", "640x480", "1280x720"])            
         })
 
-    def compute_disparity(self, left_image: np.ndarray, right_image: np.ndarray) -> np.ndarray:
+    def compute_disparity(self, input: InputPair) -> StereoOutput:
+        left_image, right_image = input.left_image, input.right_image
         cols, rows = self.parameters["Shape"].value.split('x')
         version = self.parameters["Mode"].value
         iters = self.parameters["Iterations"].value
@@ -97,8 +98,8 @@ class CREStereo(StereoMethod):
         if disparity_map.shape[:2] != left_image.shape[:2]:
             disparity_map = cv2.resize (disparity_map, (left_image.shape[1], left_image.shape[0]), cv2.INTER_NEAREST)
             x_scale = left_image.shape[1] / float(cols)
-            disparity_map *= np.float32(x_scale)
-        return disparity_map, elapsed_time
+            disparity_map *= np.float32(x_scale)        
+        return StereoOutput(disparity_map, input.left_image, elapsed_time)
 
     def _download_model (self, model_path: Path):
         filename = model_path.name

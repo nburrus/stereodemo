@@ -1,0 +1,1 @@
+From OpenCV samples/data.

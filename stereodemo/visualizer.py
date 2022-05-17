@@ -12,32 +12,8 @@ import open3d as o3d
 import open3d.visualization.gui as gui
 import open3d.visualization.rendering as rendering
 
-from .methods import IntParameter, EnumParameter, StereoMethod
-
-@dataclass
-class Calibration:
-    width: int
-    height: int
-    fx: float
-    fy: float
-    cx: float
-    cy: float
-    baseline_meters: float
-
-    def to_json(self):
-        return json.dumps(self.__dict__)
-
-    def from_json(json_str):
-        d = json.loads(json_str)
-        return Calibration(**d)
-
-@dataclass
-class MethodOutput:
-    disparity_pixels: np.ndarray
-    computation_time: float
-    point_cloud: o3d.geometry.PointCloud
+from .methods import IntParameter, EnumParameter, StereoOutput, StereoMethod, Calibration, InputPair
    
-
 def show_color_disparity (name: str, disparity_map: np.ndarray):
     min_disp = 0
     max_disp = 64
@@ -48,16 +24,6 @@ def show_color_disparity (name: str, disparity_map: np.ndarray):
 class Settings:
     def __init__(self):
         self.show_axes = False
-
-@dataclass
-class InputPair:
-    left_image: np.ndarray
-    right_image: np.ndarray
-    calibration: Calibration
-    status: str
-
-    def has_data(self):
-        return self.left_image is not None
 
 class Source:
     def __init__(self):
@@ -172,11 +138,10 @@ class Visualizer:
 
     def _clear_outputs (self):
         for name in self.stereo_methods.keys():
-            self.stereo_methods_output[name] = MethodOutput(
+            self.stereo_methods_output[name] = StereoOutput(
                 disparity_pixels=None,
-                computation_time=np.nan,
-                point_cloud = None
-            )
+                color_image=None,
+                computation_time=np.nan)
 
     def _reset_camera (self):
         # bbox = o3d.geometry.AxisAlignedBoundingBox(np.array([-10, 0,-10]), np.array([0,3,0]))
@@ -295,36 +260,29 @@ class Visualizer:
             self.window.close_dialog ()
         self._progress_dialog = None
 
-        disparity, computation_time = self.executor_future.result()
+        stereo_output = self.executor_future.result()
         self.executor_future = None
 
         name = self.algo_list.selected_value
-        show_color_disparity (name, disparity)
+        show_color_disparity (name, stereo_output.disparity_pixels)
 
-        output = self.stereo_methods_output[name]
+        self.stereo_methods_output[name] = stereo_output
+        depth_meters = StereoMethod.depth_meters_from_disparity(stereo_output.disparity_pixels, self.input.calibration)
 
-        old_seterr = np.seterr(divide='ignore')
-        depth_meters = np.float32(self.input.calibration.baseline_meters * self.input.calibration.fx) / disparity
-        depth_meters = np.nan_to_num(depth_meters)
-        depth_meters = np.clip (depth_meters, -1.0, 10.0)
-        np.seterr(**old_seterr)
-
-        if output.point_cloud is not None:
+        if self._scene.scene.has_geometry(name):
             self._scene.scene.remove_geometry(name)
 
-        o3d_left = o3d.geometry.Image(self.input.left_image)
+        o3d_color = o3d.geometry.Image(stereo_output.color_image)
         o3d_depth = o3d.geometry.Image(depth_meters)
-        rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(o3d_left,
+        rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(o3d_color,
                                                                   o3d_depth,
                                                                   1,
                                                                   depth_trunc=10.0,
                                                                   convert_rgb_to_intensity=False)
-        output.point_cloud = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.o3dCameraIntrinsic)
-        output.point_cloud.transform([[1,0,0,0],[0,-1,0,0],[0,0,-1,0],[0,0,0,1]])
-        self._scene.scene.add_geometry(name, output.point_cloud, rendering.MaterialRecord())
+        stereo_output.point_cloud = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.o3dCameraIntrinsic)
+        stereo_output.point_cloud.transform([[1,0,0,0],[0,-1,0,0],[0,0,-1,0],[0,0,0,1]])
+        self._scene.scene.add_geometry(name, stereo_output.point_cloud, rendering.MaterialRecord())
 
-        output.disparity_pixels = disparity
-        output.computation_time = computation_time
         self._update_method_output (name)        
     
     def _run_current_method(self):
@@ -337,8 +295,8 @@ class Visualizer:
         name = self.algo_list.selected_value
 
         def do_beefy_work():
-            disparity, computation_time = self.stereo_methods[name].compute_disparity (self.input.left_image, self.input.right_image)
-            return disparity, computation_time
+            stereo_output = self.stereo_methods[name].compute_disparity (self.input)
+            return stereo_output
 
         self._last_progress_update_time = time.time()
         self.executor_future = self.executor.submit (do_beefy_work)
