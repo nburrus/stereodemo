@@ -44,6 +44,7 @@ class OakdSource (visualizer.Source):
         self.connect ()
 
     def connect (self):
+        print ("Trying to connect to an OAK camera...")
         pipeline = dai.Pipeline()
 
         # Set up left and right cameras
