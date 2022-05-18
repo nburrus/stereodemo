@@ -84,11 +84,11 @@ class Visualizer:
         label = gui.Label("Input downsampling")
         label.tooltip = "Number of /2 downsampling steps to apply on the input"
         horiz.add_child(label)
-        downsample_slider = gui.Slider(gui.Slider.INT)
-        downsample_slider.set_limits(0, 4)
-        downsample_slider.int_value = self._downsample_factor
-        downsample_slider.set_on_value_changed(self._downsampling_changed)
-        horiz.add_child(downsample_slider)
+        downsampling_slider = gui.Slider(gui.Slider.INT)
+        downsampling_slider.set_limits(0, 4)
+        downsampling_slider.int_value = self._downsample_factor
+        downsampling_slider.set_on_value_changed(self._downsampling_changed)
+        horiz.add_child(downsampling_slider)
         self._settings_panel.add_child(horiz)
 
         self._settings_panel.add_fixed(self.separation_height)
@@ -116,6 +116,18 @@ class Visualizer:
         self._show_axes = gui.Checkbox("Show axes")
         self._show_axes.set_on_checked(self._on_show_axes)
         view_ctrls.add_child(self._show_axes)
+        
+        horiz = gui.Horiz(0, gui.Margins(0.25 * em, 0.25 * em, 0.25 * em, 0.25 * em))
+        label = gui.Label("Max depth (m)")
+        label.tooltip = "Max depth to render in meters"
+        horiz.add_child(label)
+        self.depth_range_slider = gui.Slider(gui.Slider.INT)
+        self.depth_range_slider.set_limits(1, 1000)
+        self.depth_range_slider.int_value = 10
+        self.depth_range_slider.set_on_value_changed(lambda v: self._update_rendering())
+        horiz.add_child(self.depth_range_slider)
+        view_ctrls.add_child(horiz)
+        
         self._settings_panel.add_fixed(self.separation_height)
         self._settings_panel.add_child(view_ctrls)
 
@@ -265,7 +277,7 @@ class Visualizer:
 
     def _on_algo_list_selected(self, name: str, is_dbl_click: bool):
         self.method_params_proxy.set_widget(self._build_stereo_method_widgets(name))
-        self._update_method_output (name)
+        self._update_runtime ()
         for other_name in self.stereo_methods_output.keys():
             self._scene.scene.show_geometry(other_name, False)
         self._scene.scene.show_geometry(name, True)
@@ -311,6 +323,13 @@ class Visualizer:
         show_color_disparity (name, stereo_output.disparity_pixels)
 
         self.stereo_methods_output[name] = stereo_output
+        self._update_rendering ()
+        self._update_runtime ()
+    
+    def _update_rendering (self):
+        name = self.algo_list.selected_value
+        stereo_output = self.stereo_methods_output[name]
+
         depth_meters = StereoMethod.depth_meters_from_disparity(stereo_output.disparity_pixels, self.input.calibration)
 
         if self._scene.scene.has_geometry(name):
@@ -321,13 +340,11 @@ class Visualizer:
         rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(o3d_color,
                                                                   o3d_depth,
                                                                   1,
-                                                                  depth_trunc=10.0,
+                                                                  depth_trunc=self.depth_range_slider.int_value,
                                                                   convert_rgb_to_intensity=False)
         stereo_output.point_cloud = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.o3dCameraIntrinsic)
         stereo_output.point_cloud.transform([[1,0,0,0],[0,-1,0,0],[0,0,-1,0],[0,0,0,1]])
         self._scene.scene.add_geometry(name, stereo_output.point_cloud, rendering.MaterialRecord())
-
-        self._update_method_output (name)        
     
     def _run_current_method(self):
         if self.executor_future is not None:
@@ -367,7 +384,8 @@ class Visualizer:
         self.window.show_dialog(dlg)
         return dlg
 
-    def _update_method_output (self, name):
+    def _update_runtime (self):
+        name = self.algo_list.selected_value
         output = self.stereo_methods_output[name]
         if np.isnan(output.computation_time):
             self.last_runtime.text = "No output yet."

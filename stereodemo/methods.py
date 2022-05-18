@@ -10,6 +10,8 @@ import json
 import numpy as np
 import cv2
 
+max_depth_meters = 100.0 # for drivingstereo
+
 @dataclass
 class Calibration:
     width: int
@@ -109,7 +111,6 @@ class StereoMethod:
         dcx = np.float32(calibration.cx0 - calibration.cx1)
         depth_meters = np.float32(calibration.baseline_meters * calibration.fx) / (disparity_pixels - dcx)
         depth_meters = np.nan_to_num(depth_meters)
-        depth_meters = np.clip (depth_meters, -1.0, 10.0)
         depth_meters[disparity_pixels < 0.] = -1.0
         np.seterr(**old_seterr)
         return depth_meters

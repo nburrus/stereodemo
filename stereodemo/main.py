@@ -18,30 +18,75 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--oak', action='store_true', help='Use an oak-D camera to grab images.')
-    parser.add_argument('--images',
-                        help='left_image1 ... [left_imageN] right_image1 ... [right_imageN]. Load image pairs from disk. Provide all the left images first, then all the right images, both rectified.',
+    parser.add_argument('images',
+                        help='rectified_left1 rectified_right1 ... [rectified_leftN rectified_rightN]. Load image pairs from disk. You can also specify folders.',
                         type=Path, 
                         default=None,
-                        nargs='+')
+                        nargs='*')
     parser.add_argument('--calibration', type=Path, help='Calibration json. If unspecified, it will try to load a stereodemo_calibration.json file in the left image parent folder.', default=None)
     return parser.parse_args()
 
+def find_stereo_images_in_dir(dir: Path):
+    left_files = []
+    right_files = []
+
+    def validated_lists():
+        for f in right_files:
+            assert f.exists()
+        return left_files, right_files
+
+    for ext in ['jpg', 'png']:
+        left_files = list(dir.glob(f'**/*left*.{ext}'))
+        if len(left_files) != 0:
+            right_files = [f.parent / f.name.replace('left', 'right') for f in left_files]
+            return validated_lists()
+
+    for ext in ['jpg', 'png']:
+        left_files = list(dir.glob(f'**/im0.{ext}'))
+        if len(left_files) != 0:
+            right_files = [f.parent / f.name.replace('im0', 'im1') for f in left_files]
+            return validated_lists()
+    
+    return left_files, right_files
+
 class FileListSource (visualizer.Source):
-    def __init__(self, file_list, calibration=None):
-        # You must provide left images, and then right images.
-        assert len(file_list) % 2 == 0
-        N = len(file_list) // 2
-        self.left_images_path = file_list[:N]
-        self.right_images_path = file_list[N:]
+    def __init__(self, file_or_dir_list, calibration=None):        
+        self.left_images_path = []
+        self.right_images_path = []
+
+        while file_or_dir_list:
+            f = file_or_dir_list.pop(0)
+            if f.is_dir():
+                left, right = find_stereo_images_in_dir (f)
+                self.left_images_path += left
+                self.right_images_path += right
+            else:
+                if f.suffix.lower() not in ['.png', '.jpg', '.jpeg']:
+                    print (f"Warning: ignoring {f}, not an image extension.")
+                    continue
+                try:
+                    right_f = file_or_dir_list.pop(0)
+                except:
+                    print (f"Missing right image for {f}, skipping")
+                    continue
+                self.left_images_path.append(f)
+                self.right_images_path.append(right_f)
+        
         self.index = 0
         self.user_provided_calibration_path = calibration
+        self.num_pairs = len(self.left_images_path)
+        if self.num_pairs == 0:
+            raise Exception("No image pairs.")
 
     def get_next_pair(self):
-        if self.index >= len(self.left_images_path):
+
+        if self.index >= self.num_pairs:
             self.index = 0
 
         def load_image(path):
-            return cv2.imread(str(path), cv2.IMREAD_COLOR)
+            im =  cv2.imread(str(path), cv2.IMREAD_COLOR)
+            assert im is not None
+            return im
 
         left_image_path = self.left_images_path[self.index]
         left_image = load_image(left_image_path)
@@ -68,7 +113,7 @@ class FileListSource (visualizer.Source):
         right_image_path = self.right_images_path[self.index]
         self.index += 1
         status = f"{left_image_path} / {right_image_path}"
-        return visualizer.InputPair (load_image(left_image_path), load_image(right_image_path), calib, status)
+        return visualizer.InputPair (left_image, load_image(right_image_path), calib, status)
 
 def main():
     method_list = [
@@ -79,14 +124,14 @@ def main():
 
     args = parse_args()
 
-    if args.images is not None:
+    if args.images:
         source = FileListSource(args.images, args.calibration)
     elif args.oak:
         from .oakd_source import OakdSource, StereoFromOakInputSource
         source = OakdSource()
         method_list = [StereoFromOakInputSource()] + method_list
     else:
-        print ("You need to specify --oak or --images")
+        print ("You need to specify --oak or provide images")
         sys.exit (1)
 
     method_dict = { method.name:method for method in method_list } 
