@@ -12,6 +12,8 @@ import cv2
 from . import oakd_source
 from . import visualizer
 from . import methods
+
+from .raft_stereo import RaftStereo
 from .cre_stereo import CREStereo
 from .chang_realtime_stereo import ChangRealtimeStereo
 from .hitnet_stereo import HitnetStereo
@@ -124,6 +126,7 @@ def main():
         CREStereo(),
         ChangRealtimeStereo(),
         HitnetStereo(),
+        RaftStereo(),
     ]
 
     args = parse_args()

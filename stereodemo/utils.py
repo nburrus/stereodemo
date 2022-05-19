@@ -37,4 +37,3 @@ class ImagePadder:
         w = im.shape[1] - self.cols_to_pad
         h = im.shape[0] - self.rows_to_pad
         return im[:h, :w, :]
-

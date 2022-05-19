@@ -47,7 +47,9 @@ urls = {
 # https://github.com/PINTO0309/PINTO_model_zoo/tree/main/284_CREStereo
 class CREStereo(StereoMethod):
     def __init__(self):
-        super().__init__("CRE Stereo", "Practical Stereo Matching via Cascaded Recurrent Network with Adaptive Correlation (CVPR 2022).", {})
+        super().__init__("CRE Stereo", 
+                         "Practical Stereo Matching via Cascaded Recurrent Network with Adaptive Correlation (CVPR 2022). Pre-trained on a large range of datasets.", 
+                         {})
         self.reset_defaults()
 
         self._loaded_session = None

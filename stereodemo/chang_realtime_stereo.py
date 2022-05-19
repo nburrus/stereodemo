@@ -28,7 +28,9 @@ urls = {
 # https://github.com/PINTO0309/PINTO_model_zoo/tree/main/284_CREStereo
 class ChangRealtimeStereo(StereoMethod):
     def __init__(self):
-        super().__init__("Chang Real-time", "Attention-Aware Feature Aggregation for Real-time Stereo Matching on Edge Devices (ACCV 2020).", {})
+        super().__init__("Chang Real-time",
+                         "Attention-Aware Feature Aggregation for Real-time Stereo Matching on Edge Devices (ACCV 2020). Pre-trained on SceneFlow + Kitti 2015.",
+                         {})
         self.reset_defaults()
 
         self.net = None
@@ -60,7 +62,8 @@ class ChangRealtimeStereo(StereoMethod):
         right_tensor = self._preprocess_input(input.right_image)
 
         start = time.time()
-        outputs = self.net(left_tensor, right_tensor)
+        with torch.no_grad():
+            outputs = self.net(left_tensor, right_tensor)
         elapsed_time = time.time() - start
 
         disparity_map = self._process_output(outputs)
