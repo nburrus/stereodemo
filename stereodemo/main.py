@@ -14,7 +14,7 @@ from . import visualizer
 from . import methods
 from .cre_stereo import CREStereo
 from .chang_realtime_stereo import ChangRealtimeStereo
-from .chang_realtime_stereo_onnx import ChangRealtimeStereoOnnx
+from .hitnet_stereo import HitnetStereo
 
 def parse_args():
     import argparse
@@ -123,6 +123,7 @@ def main():
         methods.StereoSGBMMethod(),
         CREStereo(),
         ChangRealtimeStereo(),
+        HitnetStereo(),
     ]
 
     args = parse_args()
