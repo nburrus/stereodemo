@@ -13,6 +13,8 @@ from . import oakd_source
 from . import visualizer
 from . import methods
 from .cre_stereo import CREStereo
+from .chang_realtime_stereo import ChangRealtimeStereo
+from .chang_realtime_stereo_onnx import ChangRealtimeStereoOnnx
 
 def parse_args():
     import argparse
@@ -119,7 +121,8 @@ def main():
     method_list = [
         methods.StereoBMMethod(),
         methods.StereoSGBMMethod(),
-        CREStereo()
+        CREStereo(),
+        ChangRealtimeStereo(),
     ]
 
     args = parse_args()

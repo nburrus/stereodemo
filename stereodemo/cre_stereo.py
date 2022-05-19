@@ -1,16 +1,13 @@
 from pathlib import Path
-import shutil
 import time
 from dataclasses import dataclass
-import urllib.request
-import tempfile
-import sys
 
 import cv2
 import numpy as np
 import onnxruntime
 
 from .methods import EnumParameter, StereoMethod, InputPair, StereoOutput
+from . import utils
 
 models_path = Path(__file__).parent.parent / 'models'
 
@@ -102,13 +99,7 @@ class CREStereo(StereoMethod):
         return StereoOutput(disparity_map, input.left_image, elapsed_time)
 
     def _download_model (self, model_path: Path):
-        filename = model_path.name
-        url = urls[filename]
-        with tempfile.TemporaryDirectory() as d:
-            tmp_file_path = Path(d) / filename
-            sys.stderr.write (f"Downloading {filename} from {url} to {model_path}...")
-            urllib.request.urlretrieve(url, tmp_file_path)
-            shutil.move (tmp_file_path, model_path)
+        utils.download_model (urls[model_path.name], model_path)
 
     def _load_model(self, model_path: Path):
         if (self._loaded_model_path == model_path):
@@ -119,7 +110,7 @@ class CREStereo(StereoMethod):
 
         assert Path(model_path).exists()
         self._loaded_model_path = model_path
-        self._loaded_session = onnxruntime.InferenceSession(str(model_path), providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
+        self._loaded_session = onnxruntime.InferenceSession(str(model_path), providers=['CPUExecutionProvider', 'CUDAExecutionProvider'])
         
         # Get model info
         self.load_input_details()

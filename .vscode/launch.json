@@ -4,6 +4,21 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        
+        {
+            "name": "Python: chang_realtimestereo_to_torchscript_onnx.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/tools/chang_realtimestereo_to_torchscript_onnx.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [ 
+                "../RealtimeStereo/",
+                "models/pretrained_Kitti2015_realtime.tar" 
+            ],
+        },
+
         {
             "name": "Python: Module",
             "type": "python",
@@ -30,7 +45,6 @@
             "args": [
                 "datasets/drivingstereo/2018-07-11-14-48-52",
             ]
-        }
-
+        },
     ]
 }
