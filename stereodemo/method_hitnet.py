@@ -36,7 +36,7 @@ urls = {
 # Official implementation https://github.com/google-research/google-research/tree/master/hitnet
 class HitnetStereo(StereoMethod):
     def __init__(self):
-        super().__init__("Hitnet", "HITNet: Hierarchical Iterative Tile Refinement Network for Real-time Stereo Matching (CVPR 2021)", {})
+        super().__init__("Hitnet (CVPR 2021)", "HITNet: Hierarchical Iterative Tile Refinement Network for Real-time Stereo Matching", {})
         self.reset_defaults()
 
         self._loaded_session = None

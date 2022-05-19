@@ -13,10 +13,11 @@ from . import oakd_source
 from . import visualizer
 from . import methods
 
-from .raft_stereo import RaftStereo
-from .cre_stereo import CREStereo
-from .chang_realtime_stereo import ChangRealtimeStereo
-from .hitnet_stereo import HitnetStereo
+from .method_opencv_bm import StereoBM, StereoSGBM
+from .method_raft_stereo import RaftStereo
+from .method_cre_stereo import CREStereo
+from .method_chang_realtime_stereo import ChangRealtimeStereo
+from .method_hitnet import HitnetStereo
 
 def parse_args():
     import argparse
@@ -121,12 +122,12 @@ class FileListSource (visualizer.Source):
 
 def main():
     method_list = [
-        methods.StereoBMMethod(),
-        methods.StereoSGBMMethod(),
+        StereoBM(),
+        StereoSGBM(),
         CREStereo(),
-        ChangRealtimeStereo(),
-        HitnetStereo(),
         RaftStereo(),
+        HitnetStereo(),
+        ChangRealtimeStereo(),
     ]
 
     args = parse_args()

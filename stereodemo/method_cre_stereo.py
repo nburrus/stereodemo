@@ -47,8 +47,8 @@ urls = {
 # https://github.com/PINTO0309/PINTO_model_zoo/tree/main/284_CREStereo
 class CREStereo(StereoMethod):
     def __init__(self):
-        super().__init__("CRE Stereo", 
-                         "Practical Stereo Matching via Cascaded Recurrent Network with Adaptive Correlation (CVPR 2022). Pre-trained on a large range of datasets.", 
+        super().__init__("CRE Stereo (CVPR 2022)", 
+                         "Practical Stereo Matching via Cascaded Recurrent Network with Adaptive Correlation. Pre-trained on a large range of datasets.", 
                          {})
         self.reset_defaults()
 
@@ -60,7 +60,7 @@ class CREStereo(StereoMethod):
             "Iterations": EnumParameter("Number of iterations", 1, ["2", "5", "10", "20"]),
             "Mode": EnumParameter("Number of passes. The combined version does 2 passes, one to get an initial estimation and a second one to refine it.",
                                   1, ["init", "combined"]),
-            "Shape": EnumParameter("Processed image size", 0, ["320x240", "640x480", "1280x720"])            
+            "Shape": EnumParameter("Processed image size", 1, ["320x240", "640x480", "1280x720"])            
         })
 
     def compute_disparity(self, input: InputPair) -> StereoOutput:

@@ -49,8 +49,8 @@ def clear_gpu_memory():
 # https://github.com/PINTO0309/PINTO_model_zoo/tree/main/284_CREStereo
 class RaftStereo(StereoMethod):
     def __init__(self):
-        super().__init__("RAFT-Stereo",
-                         "RAFT-Stereo: Multilevel Recurrent Field Transforms for Stereo Matching (3DV 2021).",
+        super().__init__("RAFT-Stereo (3DV 2021)",
+                         "RAFT-Stereo: Multilevel Recurrent Field Transforms for Stereo Matching.",
                          {})
         self.reset_defaults()
 

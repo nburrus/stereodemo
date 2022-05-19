@@ -52,8 +52,6 @@ class Visualizer:
         self.input = InputPair (None, None, None, None)
         self._downsample_factor = 0
 
-        self._clear_outputs ()
-
         self.window = gui.Application.instance.create_window("Stereo Demo", 1280, 1024)
         w = self.window  # to make the code more concise
 
@@ -65,6 +63,8 @@ class Visualizer:
         # self._scene.scene.show_ground_plane(True, rendering.Scene.GroundPlane.XZ)
         self._scene.set_view_controls(gui.SceneWidget.Controls.ROTATE_CAMERA)
         self._scene.set_on_key(self._on_key_pressed)
+
+        self._clear_outputs ()
 
         for name, o in self.stereo_methods_output.items():
             if o.point_cloud is not None:
@@ -96,7 +96,7 @@ class Visualizer:
         self.algo_list = gui.ListView()
         self.algo_list.set_items(list(stereo_methods.keys()))
         self.algo_list.selected_index = 0
-        self.algo_list.set_max_visible_items(4)
+        self.algo_list.set_max_visible_items(6)
         self.algo_list.set_on_selection_changed(self._on_algo_list_selected)
         self._settings_panel.add_child(self.algo_list)
 
@@ -173,7 +173,7 @@ class Visualizer:
             self.full_res_input = input
         cv2.imshow ("Input image", np.hstack([input.left_image, input.right_image]))
         self.input = input
-        self.input_status.text = f"{input.left_image.shape[1]}x{input.left_image.shape[0]} " + input.status
+        self.input_status.text = f"Input: {input.left_image.shape[1]}x{input.left_image.shape[0]} " + input.status
 
         if self.input.has_data():
             assert self.input.left_image.shape[1] == self.input.calibration.width and self.input.left_image.shape[0] == self.input.calibration.height
@@ -198,6 +198,8 @@ class Visualizer:
                 disparity_pixels=None,
                 color_image_bgr=None,
                 computation_time=np.nan)
+            if self._scene.scene.has_geometry(name):
+                self._scene.scene.remove_geometry(name)
 
     def _reset_camera (self):
         # bbox = o3d.geometry.AxisAlignedBoundingBox(np.array([-10, 0,-10]), np.array([0,3,0]))
@@ -323,28 +325,33 @@ class Visualizer:
         show_color_disparity (name, stereo_output.disparity_pixels)
 
         self.stereo_methods_output[name] = stereo_output
-        self._update_rendering ()
+        self._update_rendering ([name])
         self._update_runtime ()
     
-    def _update_rendering (self):
-        name = self.algo_list.selected_value
-        stereo_output = self.stereo_methods_output[name]
+    def _update_rendering (self, names_to_update=None):
+        if names_to_update is None:
+            names_to_update = list(self.stereo_methods_output.keys())
 
-        depth_meters = StereoMethod.depth_meters_from_disparity(stereo_output.disparity_pixels, self.input.calibration)
+        for name in names_to_update:
+            stereo_output = self.stereo_methods_output[name]
+            if stereo_output.disparity_pixels is None:
+                continue
 
-        if self._scene.scene.has_geometry(name):
-            self._scene.scene.remove_geometry(name)
+            depth_meters = StereoMethod.depth_meters_from_disparity(stereo_output.disparity_pixels, self.input.calibration)
 
-        o3d_color = o3d.geometry.Image(cv2.cvtColor(stereo_output.color_image_bgr, cv2.COLOR_BGR2RGB))
-        o3d_depth = o3d.geometry.Image(depth_meters)
-        rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(o3d_color,
-                                                                  o3d_depth,
-                                                                  1,
-                                                                  depth_trunc=self.depth_range_slider.int_value,
-                                                                  convert_rgb_to_intensity=False)
-        stereo_output.point_cloud = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.o3dCameraIntrinsic)
-        stereo_output.point_cloud.transform([[1,0,0,0],[0,-1,0,0],[0,0,-1,0],[0,0,0,1]])
-        self._scene.scene.add_geometry(name, stereo_output.point_cloud, rendering.MaterialRecord())
+            if self._scene.scene.has_geometry(name):
+                self._scene.scene.remove_geometry(name)
+
+            o3d_color = o3d.geometry.Image(cv2.cvtColor(stereo_output.color_image_bgr, cv2.COLOR_BGR2RGB))
+            o3d_depth = o3d.geometry.Image(depth_meters)
+            rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(o3d_color,
+                                                                    o3d_depth,
+                                                                    1,
+                                                                    depth_trunc=self.depth_range_slider.int_value,
+                                                                    convert_rgb_to_intensity=False)
+            stereo_output.point_cloud = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.o3dCameraIntrinsic)
+            stereo_output.point_cloud.transform([[1,0,0,0],[0,-1,0,0],[0,0,-1,0],[0,0,0,1]])
+            self._scene.scene.add_geometry(name, stereo_output.point_cloud, rendering.MaterialRecord())
     
     def _run_current_method(self):
         if self.executor_future is not None:

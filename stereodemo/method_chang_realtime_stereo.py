@@ -28,8 +28,8 @@ urls = {
 # https://github.com/PINTO0309/PINTO_model_zoo/tree/main/284_CREStereo
 class ChangRealtimeStereo(StereoMethod):
     def __init__(self):
-        super().__init__("Chang Real-time",
-                         "Attention-Aware Feature Aggregation for Real-time Stereo Matching on Edge Devices (ACCV 2020). Pre-trained on SceneFlow + Kitti 2015.",
+        super().__init__("Chang Real-time (ACCV 2020)",
+                         "Attention-Aware Feature Aggregation for Real-time Stereo Matching on Edge Devices. Pre-trained on SceneFlow + Kitti 2015.",
                          {})
         self.reset_defaults()
 
@@ -44,7 +44,7 @@ class ChangRealtimeStereo(StereoMethod):
 
     def reset_defaults(self):
         self.parameters.update ({
-            "Shape": EnumParameter("Processed image size", 3, ["160x128", "320x240", "640x480", "1280x720"])
+            "Shape": EnumParameter("Processed image size", 2, ["160x128", "320x240", "640x480", "1280x720"])
         })
 
     def compute_disparity(self, input: InputPair) -> StereoOutput:
