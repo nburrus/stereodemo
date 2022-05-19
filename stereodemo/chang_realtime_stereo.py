@@ -18,10 +18,10 @@ from . import utils
 models_path = Path(__file__).parent.parent / 'models'
 
 urls = {
-    "chang-realtime-stereo-cpu-1280x720.scripted.pt": "",
-    "chang-realtime-stereo-cpu-160x128.scripted.pt": "",
-    "chang-realtime-stereo-cpu-320x240.scripted.pt": "",
-    "chang-realtime-stereo-cpu-640x480.scripted.pt": "",
+    "chang-realtime-stereo-cpu-1280x720.scripted.pt": "https://github.com/nburrus/stereodemo/releases/download/v0.1-chang-realtimestereo/chang-realtime-stereo-cpu-1280x720.scripted.pt",
+    "chang-realtime-stereo-cpu-160x128.scripted.pt": "https://github.com/nburrus/stereodemo/releases/download/v0.1-chang-realtimestereo/chang-realtime-stereo-cpu-160x128.scripted.pt",
+    "chang-realtime-stereo-cpu-320x240.scripted.pt": "https://github.com/nburrus/stereodemo/releases/download/v0.1-chang-realtimestereo/chang-realtime-stereo-cpu-320x240.scripted.pt",
+    "chang-realtime-stereo-cpu-640x480.scripted.pt": "https://github.com/nburrus/stereodemo/releases/download/v0.1-chang-realtimestereo/chang-realtime-stereo-cpu-640x480.scripted.pt",
 }
 
 # Adapted from https://github.com/ibaiGorordo/ONNX-CREStereo-Depth-Estimation
@@ -42,7 +42,7 @@ class ChangRealtimeStereo(StereoMethod):
 
     def reset_defaults(self):
         self.parameters.update ({
-            "Shape": EnumParameter("Processed image size", 1, ["160x128", "320x240", "640x480", "1280x720"])
+            "Shape": EnumParameter("Processed image size", 3, ["160x128", "320x240", "640x480", "1280x720"])
         })
 
     def compute_disparity(self, input: InputPair) -> StereoOutput:
