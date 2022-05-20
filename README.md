@@ -1,3 +1,8 @@
+[![Unit Tests](https://github.com/nburrus/stereodemo/actions/workflows/unit_tests.yml/badge.svg)](https://github.com/nburrus/stereodemo/actions/workflows/unit_tests.yml)
+<a href="https://twitter.com/nburrus">
+<img src="https://img.shields.io/twitter/url?label=Twitter&style=social&url=https%3A%2F%2Ftwitter.com%2Fnburrus" alt="Twitter Badge"/>
+</a>
+
 # Stereo Demo
 
 Compare and visualize the output of various stereo reconstruction algorithms.
@@ -62,3 +67,4 @@ pip install nvidia-cudnn
 - [OpenCV](https://opencv.org). For image loading and the traditional block matching baselines.
 - [onnxruntime](https://onnxruntime.ai/). To run pretrained models in the ONNX format.
 - [pytorch](https://pytorch.org/). To run pretrained models exported as torch script.
+- [depthai](https://docs.luxonis.com/en/latest/). Optional, to grab images from a Luxonis OAK camera.

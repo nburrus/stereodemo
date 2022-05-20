@@ -9,7 +9,6 @@ import numpy as np
 
 import cv2
 
-from . import oakd_source
 from . import visualizer
 from . import methods
 

@@ -4,7 +4,12 @@ from . import visualizer
 from .methods import InputPair, StereoMethod, StereoOutput
 
 import cv2
-import depthai as dai
+
+try:
+    import depthai as dai
+except ImportError:
+    print ("You need to 'pip install depthai' to use the OAK camera.")
+    sys.exit (1)
 
 def getFrame(queue):
   # Get frame from queue
