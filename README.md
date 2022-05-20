@@ -5,7 +5,7 @@
 
 # stereodemo
 
-Small Python utility to **compare and visualize the output of various stereo reconstruction algorithms**:
+Small Python utility to **compare and visualize the output of various stereo depth estimation algorithms**:
 
 - Make it easy to get a qualitative evaluation of several state-of-the-art models in the wild
 - Feed it left/right images or capture live from an [OAK-D camera](https://store.opencv.ai/products/oak-d)
