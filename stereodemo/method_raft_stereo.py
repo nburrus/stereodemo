@@ -13,10 +13,8 @@ from torchvision import transforms
 import cv2
 import numpy as np
 
-from .methods import EnumParameter, StereoMethod, InputPair, StereoOutput
+from .methods import Config, EnumParameter, StereoMethod, InputPair, StereoOutput
 from . import utils
-
-models_path = Path(__file__).parent.parent / 'models'
 
 urls = {
     "raft-stereo-eth3d-cpu-128x160.scripted.pt": "https://github.com/nburrus/stereodemo/releases/download/v0.1-raft-stereo/raft-stereo-eth3d-cpu-128x160.scripted.pt",
@@ -52,10 +50,11 @@ def clear_gpu_memory():
 # Adapted from https://github.com/ibaiGorordo/ONNX-CREStereo-Depth-Estimation
 # https://github.com/PINTO0309/PINTO_model_zoo/tree/main/284_CREStereo
 class RaftStereo(StereoMethod):
-    def __init__(self):
+    def __init__(self, config: Config):
         super().__init__("RAFT-Stereo (3DV 2021)",
                          "RAFT-Stereo: Multilevel Recurrent Field Transforms for Stereo Matching.",
-                         {})
+                         {},
+                         config)
         self.reset_defaults()
 
         self.net = None
@@ -76,16 +75,13 @@ class RaftStereo(StereoMethod):
         return stereo_output
 
     def _compute_disparity(self, input: InputPair) -> StereoOutput:
-        if not models_path.exists():
-            models_path.mkdir(parents=True, exist_ok=True)
-
         cols, rows = self.parameters["Shape"].value.split('x')
         cols, rows = int(cols), int(rows)
         self.target_size = (cols, rows)
 
         variant = self.parameters["Model"].value
         
-        model_path = models_path / f'raft-stereo-{variant}-{rows}x{cols}.scripted.pt'
+        model_path = self.config.models_path / f'raft-stereo-{variant}-{rows}x{cols}.scripted.pt'
         self._load_model (model_path)
 
         left_tensor = self._preprocess_input(input.left_image)

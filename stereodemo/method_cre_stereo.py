@@ -6,10 +6,8 @@ import cv2
 import numpy as np
 import onnxruntime
 
-from .methods import EnumParameter, StereoMethod, InputPair, StereoOutput
+from .methods import Config, EnumParameter, StereoMethod, InputPair, StereoOutput
 from . import utils
-
-models_path = Path(__file__).parent.parent / 'models'
 
 urls = {
     "crestereo_combined_iter10_240x320.onnx": "https://github.com/nburrus/stereodemo/releases/download/v0.1-crestereo/crestereo_combined_iter10_240x320.onnx",
@@ -46,10 +44,11 @@ urls = {
 # Adapted from https://github.com/ibaiGorordo/ONNX-CREStereo-Depth-Estimation
 # https://github.com/PINTO0309/PINTO_model_zoo/tree/main/284_CREStereo
 class CREStereo(StereoMethod):
-    def __init__(self):
+    def __init__(self, config: Config):
         super().__init__("CRE Stereo (CVPR 2022)", 
                          "Practical Stereo Matching via Cascaded Recurrent Network with Adaptive Correlation. Pre-trained on a large range of datasets.", 
-                         {})
+                         {},
+                         config)
         self.reset_defaults()
 
         self._loaded_session = None
@@ -68,9 +67,7 @@ class CREStereo(StereoMethod):
         cols, rows = self.parameters["Shape"].value.split('x')
         version = self.parameters["Mode"].value
         iters = self.parameters["Iterations"].value
-        if not models_path.exists():
-            models_path.mkdir(parents=True, exist_ok=True)
-        model_path = models_path / f'crestereo_{version}_iter{iters}_{rows}x{cols}.onnx'
+        model_path = self.config.models_path / f'crestereo_{version}_iter{iters}_{rows}x{cols}.onnx'
         self._load_model (model_path)
 
         left_tensor = self._prepare_input(left_image)

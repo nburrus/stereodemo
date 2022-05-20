@@ -11,7 +11,7 @@ def download_model (url: str, model_path: Path):
     filename = model_path.name
     with tempfile.TemporaryDirectory() as d:
         tmp_file_path = Path(d) / filename
-        sys.stderr.write (f"Downloading {filename} from {url} to {model_path}...")
+        print (f"Downloading {filename} from {url} to {model_path}...")
         urllib.request.urlretrieve(url, tmp_file_path)
         shutil.move (tmp_file_path, model_path)
 

@@ -11,10 +11,8 @@ import onnxruntime
 import cv2
 import numpy as np
 
-from .methods import EnumParameter, StereoMethod, InputPair, StereoOutput
+from .methods import Config, EnumParameter, StereoMethod, InputPair, StereoOutput
 from . import utils
-
-models_path = Path(__file__).parent.parent / 'models'
 
 urls = {
     "hitnet_eth3d_120x160.onnx": "https://github.com/nburrus/stereodemo/releases/download/v0.1-hitnet/hitnet_eth3d_120x160.onnx",
@@ -35,8 +33,11 @@ urls = {
 # Onnx models from https://github.com/PINTO0309/PINTO_model_zoo/tree/main/142_HITNET
 # Official implementation https://github.com/google-research/google-research/tree/master/hitnet
 class HitnetStereo(StereoMethod):
-    def __init__(self):
-        super().__init__("Hitnet (CVPR 2021)", "HITNet: Hierarchical Iterative Tile Refinement Network for Real-time Stereo Matching", {})
+    def __init__(self, config: Config):
+        super().__init__("Hitnet (CVPR 2021)",
+                         "HITNet: Hierarchical Iterative Tile Refinement Network for Real-time Stereo Matching",
+                         {},
+                         config)
         self.reset_defaults()
 
         self._loaded_session = None
@@ -48,15 +49,12 @@ class HitnetStereo(StereoMethod):
             "Training Set": EnumParameter("Dataset used during training", 1, ["sceneflow", "middlebury", "eth3d"])
         })
 
-    def compute_disparity(self, input: InputPair) -> StereoOutput:
-        if not models_path.exists():
-            models_path.mkdir(parents=True, exist_ok=True)
-        
+    def compute_disparity(self, input: InputPair) -> StereoOutput:        
         cols, rows = self.parameters["Shape"].value.split('x')
         cols, rows = int(cols), int(rows)
         training_set = self.parameters["Training Set"].value
 
-        model_path = models_path / f'hitnet_{training_set}_{rows}x{cols}.onnx'
+        model_path = self.config.models_path / f'hitnet_{training_set}_{rows}x{cols}.onnx'
         self._load_model (model_path)
 
         model_inputs = self._loaded_session.get_inputs()

@@ -12,10 +12,8 @@ from torchvision import transforms
 import cv2
 import numpy as np
 
-from .methods import EnumParameter, StereoMethod, InputPair, StereoOutput
+from .methods import Config, EnumParameter, StereoMethod, InputPair, StereoOutput
 from . import utils
-
-models_path = Path(__file__).parent.parent / 'models'
 
 urls = {
     "chang-realtime-stereo-cpu-1280x720.scripted.pt": "https://github.com/nburrus/stereodemo/releases/download/v0.1-chang-realtimestereo/chang-realtime-stereo-cpu-1280x720.scripted.pt",
@@ -27,10 +25,11 @@ urls = {
 # Adapted from https://github.com/ibaiGorordo/ONNX-CREStereo-Depth-Estimation
 # https://github.com/PINTO0309/PINTO_model_zoo/tree/main/284_CREStereo
 class ChangRealtimeStereo(StereoMethod):
-    def __init__(self):
+    def __init__(self, config: Config):
         super().__init__("Chang Real-time (ACCV 2020)",
                          "Attention-Aware Feature Aggregation for Real-time Stereo Matching on Edge Devices. Pre-trained on SceneFlow + Kitti 2015.",
-                         {})
+                         {},
+                         config)
         self.reset_defaults()
 
         self.net = None
@@ -48,14 +47,11 @@ class ChangRealtimeStereo(StereoMethod):
         })
 
     def compute_disparity(self, input: InputPair) -> StereoOutput:
-        if not models_path.exists():
-            models_path.mkdir(parents=True, exist_ok=True)
-        
         cols, rows = self.parameters["Shape"].value.split('x')
         cols, rows = int(cols), int(rows)
         self.target_size = (cols, rows)
 
-        model_path = models_path / f'chang-realtime-stereo-cpu-{cols}x{rows}.scripted.pt'
+        model_path = self.config.models_path / f'chang-realtime-stereo-cpu-{cols}x{rows}.scripted.pt'
         self._load_model (model_path)
 
         left_tensor = self._preprocess_input(input.left_image)

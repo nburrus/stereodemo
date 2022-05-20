@@ -3,7 +3,7 @@ import sys
 import time
 
 from . import visualizer
-from .methods import InputPair, StereoMethod, StereoOutput
+from .methods import Config, InputPair, StereoMethod, StereoOutput
 
 import cv2
 
@@ -120,8 +120,8 @@ class OakdSource (visualizer.Source):
         return visualizer.InputPair(leftFrame, rightFrame, self.calibration, "OAK-D Camera", disparityPixels)
 
 class StereoFromOakInputSource(StereoMethod):
-    def __init__(self):
-        super().__init__("Input Source", "Stereo computed by the input source", {})
+    def __init__(self, config: Config):
+        super().__init__("Input Source", "Stereo computed by the input source", {}, config)
 
     def compute_disparity(self, input: InputPair) -> StereoOutput:
         # The disparity is aligned to the right image with OAK-D

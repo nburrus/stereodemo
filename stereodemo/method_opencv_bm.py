@@ -3,7 +3,7 @@ import time
 import numpy as np
 import cv2
 
-from .methods import StereoMethod, IntParameter, EnumParameter, InputPair, StereoOutput
+from .methods import Config, StereoMethod, IntParameter, EnumParameter, InputPair, StereoOutput
 
 def odd_only(x):
     return x if x % 2 == 1 else x+1
@@ -14,8 +14,8 @@ def multiple_of_16(x):
 # Default parameters taken from 
 # https://github.com/opencv/opencv/blob/4.x/samples/cpp/stereo_match.cpp
 class StereoBM(StereoMethod):
-    def __init__(self):
-        super().__init__("OpenCV BM", "OpenCV Simple Block Matching", {})
+    def __init__(self, config: Config):
+        super().__init__("OpenCV BM", "OpenCV Simple Block Matching", {}, config)
         self.reset_defaults()
 
     def reset_defaults(self):
@@ -56,8 +56,8 @@ class StereoBM(StereoMethod):
         return StereoOutput(disparity, input.left_image, time.time()-start)
 
 class StereoSGBM(StereoMethod):
-    def __init__(self):
-        super().__init__("OpenCV SGBM", "OpenCV Semi-Global Block Matching", {})
+    def __init__(self, config: Config):
+        super().__init__("OpenCV SGBM", "OpenCV Semi-Global Block Matching", {}, config)
         self.reset_defaults ()
 
     def reset_defaults(self):

@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 from dataclasses import dataclass
+from pathlib import Path
 
 from typing import Any, Dict, List, Tuple
 import time
@@ -83,11 +84,16 @@ class EnumParameter:
     def value(self) -> str:
         return self.values[self.index]
 
+@dataclass
+class Config:
+    models_path: Path
+
 class StereoMethod:
-    def __init__(self, name: str, description: str, parameters: Dict):
+    def __init__(self, name: str, description: str, parameters: Dict, config: Config):
         self.name = name
         self.parameters = parameters
         self.description = description
+        self.config = config
 
     def reset_defaults(self):
         pass

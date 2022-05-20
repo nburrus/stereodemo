@@ -14,8 +14,6 @@ import numpy as np
 from .methods import EnumParameter, StereoMethod, InputPair, StereoOutput
 from . import utils
 
-models_path = Path(__file__).parent.parent / 'models'
-
 urls = {
     "chang-realtime-stereo-cpu-1280x720.onnx": "",
     "chang-realtime-stereo-cpu-160x128.onnx": "",

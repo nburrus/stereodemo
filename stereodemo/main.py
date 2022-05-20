@@ -2,6 +2,7 @@ from abc import abstractmethod
 import json
 from pathlib import Path
 import sys
+import tempfile
 import time
 from types import SimpleNamespace
 
@@ -29,6 +30,8 @@ def parse_args():
                         default=None,
                         nargs='*')
     parser.add_argument('--calibration', type=Path, help='Calibration json. If unspecified, it will try to load a stereodemo_calibration.json file in the left image parent folder.', default=None)
+    default_models_path = Path.home() / ".cache" / "stereodemo" / "models"
+    parser.add_argument('--models-path', type=Path, help='Path to store the downloaded models.', default=default_models_path)
     return parser.parse_args()
 
 def find_stereo_images_in_dir(dir: Path):
@@ -123,23 +126,39 @@ class FileListSource (visualizer.Source):
         return visualizer.InputPair (left_image, load_image(right_image_path), calib, status)
 
 def main():
-    method_list = [
-        StereoBM(),
-        StereoSGBM(),
-        CREStereo(),
-        RaftStereo(),
-        HitnetStereo(),
-        ChangRealtimeStereo(),
-    ]
-
     args = parse_args()
+
+    try:
+        args.models_path.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        sys.stderr.write (f"Warning: cannot use the default models path {args.models_path}: {e}\n")
+        sys.stderr.write ("A valid path is necessary to store the downloaded models.\n")
+        args.models_path = Path(tempfile.gettempdir()) / 'stereodemo_models'
+        sys.stderr.write (f"Going to use the temporary directory {args.models_path} instead, specify --model-paths to specify a custom persistent path instead.\n")
+        try:
+            args.models_path.mkdir(parents=True, exist_ok=True)
+        except:
+            sys.stderr.write ("Could not create a temporary directory to store the downloaded models.\n")
+            sys.stderr.write ("Aborting, you need to specify --models-path with a valid writable path.\n")
+            sys.exit (1)
+    print (f"INFO: will store downloaded models in {args.models_path}")
+
+    config = methods.Config(args.models_path)
+    method_list = [
+        StereoBM(config),
+        StereoSGBM(config),
+        CREStereo(config),
+        RaftStereo(config),
+        HitnetStereo(config),
+        ChangRealtimeStereo(config),
+    ]
 
     if args.images:
         source = FileListSource(args.images, args.calibration)
     elif args.oak:
         from .oakd_source import OakdSource, StereoFromOakInputSource
         source = OakdSource(args.oak_output_folder)
-        method_list = [StereoFromOakInputSource()] + method_list
+        method_list = [StereoFromOakInputSource(config)] + method_list
     else:
         print ("You need to specify --oak or provide images")
         sys.exit (1)
