@@ -20,6 +20,7 @@ def show_color_disparity (name: str, disparity_map: np.ndarray):
     max_disp = 64
     norm_disparity_map = 255*((disparity_map-min_disp) / (max_disp-min_disp))
     disparity_color = cv2.applyColorMap(cv2.convertScaleAbs(norm_disparity_map, 1), cv2.COLORMAP_MAGMA)
+    cv2.namedWindow (name, cv2.WINDOW_KEEPRATIO)
     cv2.imshow (name, disparity_color)
 
 class Settings:
@@ -123,7 +124,7 @@ class Visualizer:
         horiz.add_child(label)
         self.depth_range_slider = gui.Slider(gui.Slider.INT)
         self.depth_range_slider.set_limits(1, 1000)
-        self.depth_range_slider.int_value = 10
+        self.depth_range_slider.int_value = 100
         self.depth_range_slider.set_on_value_changed(lambda v: self._update_rendering())
         horiz.add_child(self.depth_range_slider)
         view_ctrls.add_child(horiz)
@@ -171,6 +172,7 @@ class Visualizer:
             self._downsample_input (input)
         else:
             self.full_res_input = input
+        cv2.namedWindow ("Input image", cv2.WINDOW_KEEPRATIO)
         cv2.imshow ("Input image", np.hstack([input.left_image, input.right_image]))
         self.input = input
         self.input_status.text = f"Input: {input.left_image.shape[1]}x{input.left_image.shape[0]} " + input.status

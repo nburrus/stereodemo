@@ -41,18 +41,20 @@ def find_stereo_images_in_dir(dir: Path):
         return left_files, right_files
 
     for ext in ['jpg', 'png']:
-        left_files = sorted(list(dir.glob(f'**/*left*.{ext}')))
-        if len(left_files) != 0:
-            right_files = [f.parent / f.name.replace('left', 'right') for f in left_files]
-            return validated_lists()
+        left = sorted(list(dir.glob(f'**/*left*.{ext}')))
+        if len(left) != 0:
+            right = [f.parent / f.name.replace('left', 'right') for f in left]
+            left_files += left
+            right_files += right
 
     for ext in ['jpg', 'png']:
-        left_files = sorted(list(dir.glob(f'**/im0.{ext}')))
-        if len(left_files) != 0:
-            right_files = [f.parent / f.name.replace('im0', 'im1') for f in left_files]
-            return validated_lists()
+        left = sorted(list(dir.glob(f'**/im0.{ext}')))
+        if len(left) != 0:
+            right = [f.parent / f.name.replace('im0', 'im1') for f in left]
+            left_files += left
+            right_files += right            
     
-    return left_files, right_files
+    return validated_lists()
 
 class FileListSource (visualizer.Source):
     def __init__(self, file_or_dir_list, calibration=None):        

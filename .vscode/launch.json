@@ -5,19 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         
-        {
-            "name": "Python: chang_realtimestereo_to_torchscript_onnx.py",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/tools/chang_realtimestereo_to_torchscript_onnx.py",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
-            "justMyCode": false,
-            "args": [ 
-                "../RealtimeStereo/",
-                "models/pretrained_Kitti2015_realtime.tar" 
-            ],
-        },
+        // {
+        //     "name": "Python: chang_realtimestereo_to_torchscript_onnx.py",
+        //     "type": "python",
+        //     "request": "launch",
+        //     "program": "${workspaceFolder}/tools/chang_realtimestereo_to_torchscript_onnx.py",
+        //     "cwd": "${workspaceFolder}",
+        //     "console": "integratedTerminal",
+        //     "justMyCode": false,
+        //     "args": [ 
+        //         "../RealtimeStereo/",
+        //         "models/pretrained_Kitti2015_realtime.tar" 
+        //     ],
+        // },
 
         {
             "name": "Python: Module",
@@ -25,25 +25,8 @@
             "request": "launch",
             "module": "stereodemo",
             "justMyCode": false,
-            // "args": [
-            //     "mess/img_000_left.png",
-            //     "mess/img_001_left.png",
-            //     "mess/img_000_right.png"
-            //     "mess/img_001_right.png"
-            // ]
-            // "args": [
-            //     "datasets/eth3d_lowres/delivery_area_1l/im0.png",
-            //     "datasets/eth3d_lowres/delivery_area_1l/im1.png",
-            // ]
-            // "args": [
-            //     "--oak",
-            // ]
-            // "args": [
-            //     "datasets/middlebury_2014/Piano-perfect/im0.png",
-            //     "datasets/middlebury_2014/Piano-perfect/im1.png",
-            // ]
             "args": [
-                "datasets/drivingstereo/2018-07-11-14-48-52",
+                "datasets",
             ]
         },
     ]

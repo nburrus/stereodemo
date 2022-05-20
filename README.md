@@ -103,3 +103,4 @@ I did not implement any of these myself, but just collected pre-trained models o
 The code of steredemo is MIT licensed, but the pre-trained models are subject to the license of their respective implementation.
 
 The sample images have the license of their respective source, except for datasets/oak-d which is licenced under [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
+
