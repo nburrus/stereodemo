@@ -1,4 +1,6 @@
+from pathlib import Path
 import sys
+import time
 
 from . import visualizer
 from .methods import InputPair, StereoMethod, StereoOutput
@@ -45,8 +47,10 @@ def getStereoPair(pipeline, monoLeft, monoRight):
     return stereo
 
 class OakdSource (visualizer.Source):
-    def __init__(self):
+    def __init__(self, output_folder: Path = None):
         self.connect ()
+        self.output_folder = output_folder
+        self.frameIndex = 0
 
     def connect (self):
         print ("Trying to connect to an OAK camera...")
@@ -105,9 +109,14 @@ class OakdSource (visualizer.Source):
     def get_next_pair(self):
         leftFrame = getFrame(self.rectifiedLeftQueue)
         rightFrame = getFrame(self.rectifiedRightQueue)
+        if self.output_folder is not None:
+            self.output_folder.mkdir(parents=True, exist_ok=True)
+            cv2.imwrite(str(self.output_folder / f"img_{self.frameIndex:03d}_left.png"), leftFrame)
+            cv2.imwrite(str(self.output_folder / f"img_{self.frameIndex:03d}_right.png"), rightFrame)
         disparityPixels = getFrame(self.disparityQueue)
         leftFrame = cv2.cvtColor (leftFrame, cv2.COLOR_GRAY2RGB)
         rightFrame = cv2.cvtColor (rightFrame, cv2.COLOR_GRAY2RGB)
+        self.frameIndex += 1
         return visualizer.InputPair(leftFrame, rightFrame, self.calibration, "OAK-D Camera", disparityPixels)
 
 class StereoFromOakInputSource(StereoMethod):

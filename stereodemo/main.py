@@ -22,6 +22,7 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--oak', action='store_true', help='Use an oak-D camera to grab images.')
+    parser.add_argument('--oak-output-folder', type=Path, default=None, help='Output folder to save the images grabbed by the OAK camera')
     parser.add_argument('images',
                         help='rectified_left1 rectified_right1 ... [rectified_leftN rectified_rightN]. Load image pairs from disk. You can also specify folders.',
                         type=Path, 
@@ -135,7 +136,7 @@ def main():
         source = FileListSource(args.images, args.calibration)
     elif args.oak:
         from .oakd_source import OakdSource, StereoFromOakInputSource
-        source = OakdSource()
+        source = OakdSource(args.oak_output_folder)
         method_list = [StereoFromOakInputSource()] + method_list
     else:
         print ("You need to specify --oak or provide images")
