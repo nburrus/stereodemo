@@ -3,61 +3,67 @@
 <img src="https://img.shields.io/twitter/url?label=Twitter&style=social&url=https%3A%2F%2Ftwitter.com%2Fnburrus" alt="Twitter Badge"/>
 </a>
 
-# Stereo Demo
+# stereodemo
 
-Compare and visualize the output of various stereo reconstruction algorithms.
+Small Python utility to **compare and visualize the output of various stereo reconstruction algorithms**:
+
+- Make it easy to get a qualitative evaluation of several state-of-the-art models in the wild
+- Feed it left/right images or capture live from an [OAK-D camera](https://store.opencv.ai/products/oak-d)
+- Interactive colored point-cloud view since nice-looking disparity images can be misleading
+- Try different parameters on the same image
+
+**Supported methods** (implementation/pre-trained models taken from their respective authors):
+
+- [OpenCV](https://opencv.org) stereo block matching and Semi-global block matching baselines, with all their parameters
+- [CREStereo](https://github.com/megvii-research/CREStereo): Practical Stereo Matching via Cascaded Recurrent Network with Adaptive Correlation (CVPR 2022)
+- [RAFT-Stereo](https://github.com/princeton-vl/RAFT-Stereo): "Multilevel Recurrent Field Transforms for Stereo Matching." (3DV 2021)
+- [Hitnet](https://github.com/google-research/google-research/tree/master/hitnet): "Hierarchical Iterative Tile Refinement Network for Real-time Stereo Matching." (CVPR 2021)
+- [Chang et al. RealtimeStereo](https://github.com/JiaRenChang/RealtimeStereo): "Attention-Aware Feature Aggregation for Real-time Stereo Matching on Edge Devices" (ACCV 2020)
+
+See below for more details / credits to get each of these working.
+
+https://user-images.githubusercontent.com/541507/169557430-48e62510-60c2-4a2b-8747-f9606e405f74.mp4
 
 # Getting started
 
 ## Installation
 
-Installing the module so you can run it from any folder:
-
 ```
-pip3 install stereodemo
+python3 -m pip install stereodemo
 ```
 
-or without installing the module, directly from the repository
+## Running it
+
+### With an OAK-D camera
+
+To capture data directly from an OAK-D camera, use:
 
 ```
-python3 -m stereodemo datasets/eth3d
+stereodemo --oak
 ```
 
-## Running on some datasets
+Then click on `Next Image` to capture a new one.
 
-For convenience a subset of some popular datasets is included in this repository.
+### With image files
 
-To browse all the images:
-
-`stereodemo datasets`
-
-Then click on `Next Image` to cycle through the images it could find in the `datasets` folder.
-
-You can obviously just provide subfolders:
+For convenience a tiny subset of some popular datasets is included in this repository. Just provide a folder to `stereodemo` and it'll look for left/right pairs (either im0/im1 or left/right in the names):
 
 ```
-stereodemo datasets/drivingstereo
+# To evaluate on the oak-d images
+stereodemo datasets/oak-d 
+
+# To cycle through all images
+stereodemo datasets
 ```
 
-Or directly pairs of images:
+Then click on `Next Image` to cycle through the images.
 
-```
-stereodemo sceneflow/driving_{left,right}.png
-```
-
-# onnxruntime-gpu on Ubuntu 20.04
-
-To get the CUDAProvider running on my system I had to follow these steps:
-
-- Install CUDA 11.7 https://developer.nvidia.com/cuda-downloads
-
-- Install nvidia-cudnn
-```
-pip install nvidia-pyindex
-pip install nvidia-cudnn
-```
-
-- Make sure you have onnxruntime-gpu >= 1.10
+Sample images included in this repository:
+- [drivingstereo](datasets/drivingstereo/README.md): outdoor driving.
+- [middlebury_2014](datasets/middlebury_2014/README.md): high-res objects.
+- [eth3d](datasets/eth3d_lowres/README.md): outdoor and indoor scenes.
+- [sceneflow](datasets/sceneflow/README.md): synthetic rendering of objects.
+- [oak-d](datasets/oak-d/README.md): indoor images I captured with my OAK-D lite camera.
 
 # Dependencies
 
@@ -68,3 +74,32 @@ pip install nvidia-cudnn
 - [onnxruntime](https://onnxruntime.ai/). To run pretrained models in the ONNX format.
 - [pytorch](https://pytorch.org/). To run pretrained models exported as torch script.
 - [depthai](https://docs.luxonis.com/en/latest/). Optional, to grab images from a Luxonis OAK camera.
+
+# Credits for each method
+
+I did not implement any of these myself, but just collected pre-trained models or converted them to torch script / ONNX.
+
+- CREStereo
+  - Official implementation and pre-trained models: https://github.com/megvii-research/CREStereo
+  - Model Zoo for the ONNX models: https://github.com/PINTO0309/PINTO_model_zoo/tree/main/284_CREStereo
+  - Port to ONNX + sample loading code: https://github.com/ibaiGorordo/ONNX-CREStereo-Depth-Estimation
+
+- RAFT-Stereo
+  - Official implementation and pre-trained models: https://github.com/princeton-vl/RAFT-Stereo
+  - I exported the pytorch implementation to torch script via tracing, [with minor modifications of the source code](https://github.com/nburrus/RAFT-Stereo/commit/ebbb5a807227927ab4551274039e9bdd16a1b010).
+  - Their fastest implementation was not imported.
+
+- Hitnet
+  - Official implementation and pre-trained models: https://github.com/google-research/google-research/tree/master/hitnet
+  - Model Zoo for the ONNX models: https://github.com/PINTO0309/PINTO_model_zoo/tree/main/142_HITNET
+  - Port to ONNX + sample loading code: https://github.com/ibaiGorordo/ONNX-HITNET-Stereo-Depth-estimation
+
+- Chang et al. RealtimeStereo
+  - Official implementation and pre-trained models: https://github.com/JiaRenChang/RealtimeStereo
+  - I exported the pytorch implementation to torch script via tracing with some minor changes to the code https://github.com/JiaRenChang/RealtimeStereo/pull/15 . See [chang_realtimestereo_to_torchscript_onnx.py](tools/chang_realtimestereo_to_torchscript_onnx.py).
+
+# License
+
+The code of steredemo is MIT licensed, but the pre-trained models are subject to the license of their respective implementation.
+
+The sample images have the license of their respective source, except for datasets/oak-d which is licenced under [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
