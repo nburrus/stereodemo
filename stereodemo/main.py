@@ -40,13 +40,13 @@ def find_stereo_images_in_dir(dir: Path):
         return left_files, right_files
 
     for ext in ['jpg', 'png']:
-        left_files = list(dir.glob(f'**/*left*.{ext}'))
+        left_files = sorted(list(dir.glob(f'**/*left*.{ext}')))
         if len(left_files) != 0:
             right_files = [f.parent / f.name.replace('left', 'right') for f in left_files]
             return validated_lists()
 
     for ext in ['jpg', 'png']:
-        left_files = list(dir.glob(f'**/im0.{ext}'))
+        left_files = sorted(list(dir.glob(f'**/im0.{ext}')))
         if len(left_files) != 0:
             right_files = [f.parent / f.name.replace('im0', 'im1') for f in left_files]
             return validated_lists()
