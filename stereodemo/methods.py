@@ -76,6 +76,9 @@ class EnumParameter:
     def set_index (self, idx: int):
         self.index = idx
 
+    def set_value (self, value):
+        self.index = self.values.index(value)
+
     @property
     def value(self) -> str:
         return self.values[self.index]

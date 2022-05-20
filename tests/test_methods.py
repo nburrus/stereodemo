@@ -38,16 +38,24 @@ class TestOpenCVBM(unittest.TestCase):
         self.check_method (method_opencv_bm.StereoSGBM(), 5.1875, 0.8515)
 
     def test_chang_realtime(self):
-        self.check_method (method_chang_realtime_stereo.ChangRealtimeStereo(), 8.5121, 1.0)
+        m = method_chang_realtime_stereo.ChangRealtimeStereo()
+        m.parameters["Shape"].set_value ("320x240")
+        self.check_method (m, 12.7776, 1.0)
 
     def test_hitnet(self):
-        self.check_method (method_hitnet.HitnetStereo(), 5.1079, 1.0)
+        m = method_hitnet.HitnetStereo()
+        m.parameters["Shape"].set_value ("320x240")
+        self.check_method (m, 4.9103, 1.0)
 
     def test_crestereo(self):
-        self.check_method (method_cre_stereo.CREStereo(), 4.6947, 1.0)
+        m = method_cre_stereo.CREStereo()
+        m.parameters["Shape"].set_value ("320x240")
+        self.check_method (m, 4.6287, 1.0)
 
     def test_raft_stereo(self):
-        self.check_method (method_raft_stereo.RaftStereo(), 4.7230, 1.0)
+        m = method_raft_stereo.RaftStereo()
+        m.parameters["Shape"].set_value ("320x256")
+        self.check_method (m, 4.6408, 1.0)
 
 
 if __name__ == '__main__':
