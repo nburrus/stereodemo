@@ -47,8 +47,10 @@ def clear_gpu_memory():
     gc.collect()
     torch.cuda.empty_cache()    
 
-# Adapted from https://github.com/ibaiGorordo/ONNX-CREStereo-Depth-Estimation
-# https://github.com/PINTO0309/PINTO_model_zoo/tree/main/284_CREStereo
+# https://github.com/princeton-vl/RAFT-Stereo
+# I exported the pytorch implementation to torch script via tracing, with minor modifications of the source code.
+# https://github.com/nburrus/RAFT-Stereo/commit/ebbb5a807227927ab4551274039e9bdd16a1b010
+# Their fastest implementation was not imported.
 class RaftStereo(StereoMethod):
     def __init__(self, config: Config):
         super().__init__("RAFT-Stereo (3DV 2021)",
@@ -119,6 +121,7 @@ class RaftStereo(StereoMethod):
     def _load_model(self, model_path: Path):
         # FIXME: always reload the model, for some reason
         # feeding multiple images to the same model freezes
+        # with CUDA. Maybe due to multi-threading?
         # if (self._loaded_model_path == model_path):
         #     return
         

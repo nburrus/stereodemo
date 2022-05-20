@@ -22,8 +22,10 @@ urls = {
     "chang-realtime-stereo-cpu-640x480.scripted.pt": "https://github.com/nburrus/stereodemo/releases/download/v0.1-chang-realtimestereo/chang-realtime-stereo-cpu-640x480.scripted.pt",
 }
 
-# Adapted from https://github.com/ibaiGorordo/ONNX-CREStereo-Depth-Estimation
-# https://github.com/PINTO0309/PINTO_model_zoo/tree/main/284_CREStereo
+# https://github.com/JiaRenChang/RealtimeStereo
+# I exported the pytorch implementation to torch script via tracing with
+# some minor changes to the code https://github.com/JiaRenChang/RealtimeStereo/pull/15
+# See chang_realtimestereo_to_torchscript_onnx.py
 class ChangRealtimeStereo(StereoMethod):
     def __init__(self, config: Config):
         super().__init__("Chang Real-time (ACCV 2020)",
