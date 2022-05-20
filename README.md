@@ -5,19 +5,19 @@
 
 # stereodemo
 
-Small Python utility to **compare and visualize the output of various stereo depth estimation algorithms**:
+Small Python utility to **compare and visualize** the output of various **stereo depth estimation** algorithms:
 
 - Make it easy to get a qualitative evaluation of several state-of-the-art models in the wild
 - Feed it left/right images or capture live from an [OAK-D camera](https://store.opencv.ai/products/oak-d)
 - Interactive colored point-cloud view since nice-looking disparity images can be misleading
 - Try different parameters on the same image
 
-**Supported methods** (implementation/pre-trained models taken from their respective authors):
+**Included methods** (implementation/pre-trained models taken from their respective authors):
 
 - [OpenCV](https://opencv.org) stereo block matching and Semi-global block matching baselines, with all their parameters
-- [CREStereo](https://github.com/megvii-research/CREStereo): Practical Stereo Matching via Cascaded Recurrent Network with Adaptive Correlation (CVPR 2022)
-- [RAFT-Stereo](https://github.com/princeton-vl/RAFT-Stereo): "Multilevel Recurrent Field Transforms for Stereo Matching." (3DV 2021)
-- [Hitnet](https://github.com/google-research/google-research/tree/master/hitnet): "Hierarchical Iterative Tile Refinement Network for Real-time Stereo Matching." (CVPR 2021)
+- [CREStereo](https://github.com/megvii-research/CREStereo): "Practical Stereo Matching via Cascaded Recurrent Network with Adaptive Correlation" (CVPR 2022)
+- [RAFT-Stereo](https://github.com/princeton-vl/RAFT-Stereo): "Multilevel Recurrent Field Transforms for Stereo Matching" (3DV 2021)
+- [Hitnet](https://github.com/google-research/google-research/tree/master/hitnet): "Hierarchical Iterative Tile Refinement Network for Real-time Stereo Matching" (CVPR 2021)
 - [Chang et al. RealtimeStereo](https://github.com/JiaRenChang/RealtimeStereo): "Attention-Aware Feature Aggregation for Real-time Stereo Matching on Edge Devices" (ACCV 2020)
 
 See below for more details / credits to get each of these working.
@@ -100,7 +100,7 @@ I did not implement any of these myself, but just collected pre-trained models o
 
 # License
 
-The code of steredemo is MIT licensed, but the pre-trained models are subject to the license of their respective implementation.
+The code of stereodemo is MIT licensed, but the pre-trained models are subject to the license of their respective implementation.
 
 The sample images have the license of their respective source, except for datasets/oak-d which is licenced under [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
 
