@@ -13,6 +13,7 @@ from stereodemo import method_chang_realtime_stereo
 from stereodemo import method_hitnet
 from stereodemo import method_cre_stereo
 from stereodemo import method_raft_stereo
+from stereodemo import method_sttr
 from stereodemo.methods import Config, InputPair, Calibration, StereoOutput, StereoMethod
 
 data_folder = Path(__file__).parent.parent / 'datasets' / 'eth3d_lowres' / 'delivery_area_1l'
@@ -61,6 +62,10 @@ class TestOpenCVBM(unittest.TestCase):
         m.parameters["Shape"].set_value ("320x256")
         self.check_method (m, 4.6408, 1.0)
 
+    def test_sttr(self):
+        m = method_sttr.StereoTransformers(config)
+        m.parameters["Shape"].set_value ("640x480 (ds3)")
+        self.check_method (m, 7.4198, 1.0)
 
 if __name__ == '__main__':
     unittest.main()
