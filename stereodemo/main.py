@@ -18,6 +18,7 @@ from .method_raft_stereo import RaftStereo
 from .method_cre_stereo import CREStereo
 from .method_chang_realtime_stereo import ChangRealtimeStereo
 from .method_hitnet import HitnetStereo
+from .method_sttr import StereoTransformers
 
 def parse_args():
     import argparse
@@ -150,6 +151,7 @@ def main():
         CREStereo(config),
         RaftStereo(config),
         HitnetStereo(config),
+        StereoTransformers(config),
         ChangRealtimeStereo(config),
     ]
 

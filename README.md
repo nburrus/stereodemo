@@ -18,6 +18,7 @@ Small Python utility to **compare and visualize** the output of various **stereo
 - [CREStereo](https://github.com/megvii-research/CREStereo): "Practical Stereo Matching via Cascaded Recurrent Network with Adaptive Correlation" (CVPR 2022)
 - [RAFT-Stereo](https://github.com/princeton-vl/RAFT-Stereo): "Multilevel Recurrent Field Transforms for Stereo Matching" (3DV 2021)
 - [Hitnet](https://github.com/google-research/google-research/tree/master/hitnet): "Hierarchical Iterative Tile Refinement Network for Real-time Stereo Matching" (CVPR 2021)
+- [STereo TRansformers](https://github.com/mli0603/stereo-transformer): "Revisiting Stereo Depth Estimation From a Sequence-to-Sequence Perspective with Transformers" (ICCV 2021)
 - [Chang et al. RealtimeStereo](https://github.com/JiaRenChang/RealtimeStereo): "Attention-Aware Feature Aggregation for Real-time Stereo Matching on Edge Devices" (ACCV 2020)
 
 See below for more details / credits to get each of these working.
@@ -93,6 +94,11 @@ I did not implement any of these myself, but just collected pre-trained models o
   - Official implementation and pre-trained models: https://github.com/google-research/google-research/tree/master/hitnet
   - Model Zoo for the ONNX models: https://github.com/PINTO0309/PINTO_model_zoo/tree/main/142_HITNET
   - Port to ONNX + sample loading code: https://github.com/ibaiGorordo/ONNX-HITNET-Stereo-Depth-estimation
+
+- Stereo Transformers
+  - Official implementation and pre-trained models: https://github.com/mli0603/stereo-transformer
+  - Made [some small changes](https://github.com/nburrus/stereo-transformer/commit/0006a022c19f0c7c4d7683408531180a863603a5) to allow torch script export via tracing.
+  - The exported model currently fails with GPU inference, so only CPU inference is enabled.
 
 - Chang et al. RealtimeStereo
   - Official implementation and pre-trained models: https://github.com/JiaRenChang/RealtimeStereo

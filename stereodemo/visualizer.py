@@ -96,7 +96,7 @@ class Visualizer:
         self.algo_list = gui.ListView()
         self.algo_list.set_items(list(stereo_methods.keys()))
         self.algo_list.selected_index = 0
-        self.algo_list.set_max_visible_items(6)
+        self.algo_list.set_max_visible_items(7)
         self.algo_list.set_on_selection_changed(self._on_algo_list_selected)
         self._settings_panel.add_child(self.algo_list)
 
