@@ -31,9 +31,22 @@ class Source:
         pass
 
     @abstractmethod
+    def is_live(self) -> bool:
+        """Whether the source is capture live images or not"""
+        return False
+
+    def selected_index (self) -> int:
+        return 0
+
+    @abstractmethod
     def get_next_pair(self) -> InputPair:
         return InputPair(None, None, None, None)
 
+    def get_pair_at_index(self, idx: int) -> InputPair:
+        return InputPair(None, None, None, None)
+
+    def get_pair_list(self) -> List[str]:
+        return []
 
 class Visualizer:
     def __init__(self, stereo_methods: Dict[str, StereoMethod], source: Source):
@@ -79,6 +92,33 @@ class Visualizer:
         self._next_image_button = gui.Button("Next Image")
         self._next_image_button.set_on_clicked(self._next_image_clicked)
         self._settings_panel.add_child(self._next_image_button)
+        if not self.source.is_live():
+            # self._next_image_button = gui.Button("Next")
+            # self._next_image_button.set_on_clicked(self._next_image_clicked)
+            # horiz.add_child(self._next_image_button)
+
+            # self.images_combo = gui.ListView()
+            # input_pairs = self.source.get_pair_list()
+            # self.images_combo.set_items(input_pairs)
+            # self.images_combo.selected_index = 0
+            # self.images_combo.set_max_visible_items(3)
+            # self.images_combo.set_on_selection_changed(self._image_selected)
+            # self.images_combo.tooltip = self.images_combo.selected_value
+            # self._settings_panel.add_child(self.images_combo)
+            # self._settings_panel.add_fixed(self.separation_height)
+            # horiz.add_child(self.images_combo)
+
+            self._settings_panel.add_fixed(self.separation_height)
+            self.images_combo = gui.Combobox()
+            input_pairs = self.source.get_pair_list()
+            for pair_name in input_pairs:
+                self.images_combo.add_item(pair_name)
+            self.images_combo.selected_index = 0
+            self.images_combo.set_on_selection_changed(self._image_selected)
+            self._settings_panel.add_child(self.images_combo)
+            self._settings_panel.add_fixed(self.separation_height)
+        else:
+            self.images_combo = None
         
         horiz = gui.Horiz(0, gui.Margins(0.25 * em, 0.25 * em, 0.25 * em, 0.25 * em))
         label = gui.Label("Input downsampling")
@@ -113,9 +153,9 @@ class Visualizer:
         reset_cam_button = gui.Button("Reset Camera")
         reset_cam_button.set_on_clicked(self._reset_camera)
         view_ctrls.add_child(reset_cam_button)
-        self._show_axes = gui.Checkbox("Show axes")
-        self._show_axes.set_on_checked(self._on_show_axes)
-        view_ctrls.add_child(self._show_axes)
+        # self._show_axes = gui.Checkbox("Show axes")
+        # self._show_axes.set_on_checked(self._on_show_axes)
+        # view_ctrls.add_child(self._show_axes)
         
         horiz = gui.Horiz(0, gui.Margins(0.25 * em, 0.25 * em, 0.25 * em, 0.25 * em))
         label = gui.Label("Max depth (m)")
@@ -162,6 +202,7 @@ class Visualizer:
 
     def read_next_pair (self):
         input = self.source.get_next_pair ()
+        self._update_pair_index ()
         self._process_input (input)
 
     def _process_input (self, input):
@@ -294,6 +335,15 @@ class Visualizer:
 
     def _next_image_clicked(self):
         self.read_next_pair ()
+
+    def _image_selected(self, combo_idx, combo_val):
+        idx = self.images_combo.selected_index
+        input = self.source.get_pair_at_index (idx)
+        self._process_input (input)
+
+    def _update_pair_index (self):
+        if self.images_combo is not None:
+            self.images_combo.selected_index = self.source.selected_index()
 
     def _apply_settings(self):
         self._scene.scene.show_axes(self.settings.show_axes)

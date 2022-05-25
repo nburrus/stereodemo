@@ -106,6 +106,9 @@ class OakdSource (visualizer.Source):
         self.rectifiedRightQueue = self.device.getOutputQueue(name="rectifiedRight", maxSize=1, blocking=False)
         # depthQueue = self.device.getOutputQueue(name="depth", maxSize=1, blocking=False)
 
+    def is_live(self):
+        return True
+
     def get_next_pair(self):
         leftFrame = getFrame(self.rectifiedLeftQueue)
         rightFrame = getFrame(self.rectifiedRightQueue)

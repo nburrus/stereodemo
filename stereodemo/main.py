@@ -5,6 +5,7 @@ import sys
 import tempfile
 import time
 from types import SimpleNamespace
+from typing import List
 
 import numpy as np
 
@@ -89,11 +90,15 @@ class FileListSource (visualizer.Source):
         if self.num_pairs == 0:
             raise Exception("No image pairs.")
 
-    def get_next_pair(self):
+    def is_live(self):
+        return False
 
-        if self.index >= self.num_pairs:
-            self.index = 0
+    def selected_index (self) -> int:
+        return self.index
 
+    def get_pair_at_index(self, idx: int) -> methods.InputPair:
+        self.index = idx
+        
         def load_image(path):
             im =  cv2.imread(str(path), cv2.IMREAD_COLOR)
             assert im is not None
@@ -122,9 +127,15 @@ class FileListSource (visualizer.Source):
                                            0.075)
             
         right_image_path = self.right_images_path[self.index]
-        self.index += 1
         status = f"{left_image_path} / {right_image_path}"
         return visualizer.InputPair (left_image, load_image(right_image_path), calib, status)
+
+    def get_pair_list(self) -> List[str]:
+        return [str(f) for f in self.left_images_path]
+
+    def get_next_pair(self):        
+        self.index = (self.index + 1) % self.num_pairs
+        return self.get_pair_at_index(self.index)
 
 def main():
     args = parse_args()
