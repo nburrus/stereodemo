@@ -68,7 +68,8 @@ class StereoTransformers(StereoMethod):
             # The CUDA ones segfault with my Python 3.8 venv, but someone worked with Python 3.7.
             # Maybe related to the installed packages instead, need to investigate more.
             # Keeping only the CPU ones for now since it's enough to evaluate.
-            "Model": EnumParameter("Pre-trained Model", 0, ["kitti-cpu", "sceneflow-cpu"])
+            "Model": EnumParameter("Pre-trained Model", 0, ["kitti-cpu", "sceneflow-cpu"]),
+            "Detect occlusions": EnumParameter("Detect Occlusions", 0, ["Yes", "No"])
         })
 
     def compute_disparity(self, input: InputPair) -> StereoOutput:
@@ -82,6 +83,7 @@ class StereoTransformers(StereoMethod):
         self.target_size = (cols, rows)
 
         variant = self.parameters["Model"].value
+        detect_occlusions = self.parameters["Detect occlusions"].value == "Yes"
         
         model_path = self.config.models_path / f'sttr-{variant}-{rows}x{cols}-ds{downsample}.scripted.pt'
         self._load_model (model_path)
@@ -106,7 +108,7 @@ class StereoTransformers(StereoMethod):
             outputs = net(left_tensor, right_tensor, sampled_cols, sampled_rows)
         elapsed_time = time.time() - start
 
-        disparity_map = self._process_output(outputs)
+        disparity_map = self._process_output(outputs, use_occlusion=detect_occlusions)
         if disparity_map.shape[:2] != input.left_image.shape[:2]:
             disparity_map = cv2.resize (disparity_map, (input.left_image.shape[1], input.left_image.shape[0]), cv2.INTER_NEAREST)
             x_scale = input.left_image.shape[1] / float(cols)
@@ -119,8 +121,11 @@ class StereoTransformers(StereoMethod):
         img = cv2.resize(img, self.target_size, cv2.INTER_AREA)
         return self.img_to_tensor_transforms (img).unsqueeze(0)
 
-    def _process_output(self, outputs):
+    def _process_output(self, outputs, use_occlusion: bool):
         disparity_map = outputs[0][0].detach().cpu().numpy()
+        if use_occlusion:
+            occ_pred = outputs[1][0].data.cpu().numpy() > 0.5
+            disparity_map[occ_pred] = -1.0
         return disparity_map
 
     def _load_model(self, model_path: Path):
