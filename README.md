@@ -65,6 +65,7 @@ Sample images included in this repository:
 - [eth3d](datasets/eth3d_lowres/README.md): outdoor and indoor scenes.
 - [sceneflow](datasets/sceneflow/README.md): synthetic rendering of objects.
 - [oak-d](datasets/oak-d/README.md): indoor images I captured with my OAK-D lite camera.
+- [kitti2015](datasets/kitti2015/README.md): outdoor driving (only one image).
 
 # Dependencies
 
