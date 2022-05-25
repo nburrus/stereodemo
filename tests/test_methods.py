@@ -65,7 +65,7 @@ class TestOpenCVBM(unittest.TestCase):
     def test_sttr(self):
         m = method_sttr.StereoTransformers(config)
         m.parameters["Shape"].set_value ("640x480 (ds3)")
-        self.check_method (m, 7.4198, 1.0)
+        self.check_method (m, 7.4636, 0.9869)
 
 if __name__ == '__main__':
     unittest.main()
