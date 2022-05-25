@@ -20,6 +20,9 @@ class Calibration:
     cx1: float
     cy: float
     baseline_meters: float
+    depth_range: Tuple[float] = (0.3, 20.0)
+    left_image_rect_normalized: np.ndarray = np.array([0.,0.,1.,1.]) # origin, size in percent of image size
+    comment: str = ""
 
     def to_json(self):
         return json.dumps(self.__dict__)

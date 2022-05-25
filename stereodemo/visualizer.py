@@ -14,11 +14,12 @@ import open3d.visualization.rendering as rendering
 
 from .methods import IntParameter, EnumParameter, StereoOutput, StereoMethod, Calibration, InputPair
    
-def show_color_disparity (name: str, disparity_map: np.ndarray):
-    min_disp = 0
-    max_disp = 64
+def show_color_disparity (name: str, disparity_map: np.ndarray, calibration: Calibration):
+    min_disp = (calibration.fx * calibration.baseline_meters) / calibration.depth_range[1]
+    # disparity_pixels = (calibration.fx * calibration.baseline_meters) / depth_meters
+    max_disp = (calibration.fx * calibration.baseline_meters) / calibration.depth_range[0]
     norm_disparity_map = 255*((disparity_map-min_disp) / (max_disp-min_disp))
-    disparity_color = cv2.applyColorMap(cv2.convertScaleAbs(norm_disparity_map, 1), cv2.COLORMAP_MAGMA)
+    disparity_color = cv2.applyColorMap(cv2.convertScaleAbs(norm_disparity_map, 1), cv2.COLORMAP_VIRIDIS)
     cv2.namedWindow (name, cv2.WINDOW_KEEPRATIO)
     cv2.imshow (name, disparity_color)
 
@@ -161,12 +162,14 @@ class Visualizer:
         label = gui.Label("Max depth (m)")
         label.tooltip = "Max depth to render in meters"
         horiz.add_child(label)
-        self.depth_range_slider = gui.Slider(gui.Slider.INT)
-        self.depth_range_slider.set_limits(1, 1000)
-        self.depth_range_slider.int_value = 100
-        self.depth_range_slider.set_on_value_changed(lambda v: self._update_rendering())
+        self.depth_range_slider = gui.Slider(gui.Slider.DOUBLE)
+        self.depth_range_slider.set_limits(0.5, 1000)
+        self.depth_range_slider.double_value = 100
+        self.depth_range_slider.set_on_value_changed(self._depth_range_slider_changed)
         horiz.add_child(self.depth_range_slider)
         view_ctrls.add_child(horiz)
+
+        self._depth_range_manually_changed = False
         
         self._settings_panel.add_fixed(self.separation_height)
         self._settings_panel.add_child(view_ctrls)
@@ -212,6 +215,10 @@ class Visualizer:
             self._downsample_input (input)
         else:
             self.full_res_input = input
+
+        if not self._depth_range_manually_changed:
+            self.depth_range_slider.double_value = input.calibration.depth_range[1]
+
         cv2.namedWindow ("Input image", cv2.WINDOW_KEEPRATIO)
         cv2.imshow ("Input image", np.hstack([input.left_image, input.right_image]))
         self.input = input
@@ -259,6 +266,11 @@ class Visualizer:
         lookat = np.array([0, 0, -1.0])
         up = np.array([0, 1.0, 0])
         self._scene.look_at(lookat, eye, up)
+
+        if self.input.has_data():
+            self._depth_range_manually_changed = False
+            self.depth_range_slider.double_value = self.input.calibration.depth_range[1]
+            self._update_rendering ()
 
     def _build_stereo_method_widgets(self, name):
         em = self.window.theme.font_size
@@ -373,12 +385,16 @@ class Visualizer:
         self.executor_future = None
 
         name = self.algo_list.selected_value
-        show_color_disparity (name, stereo_output.disparity_pixels)
+        show_color_disparity (name, stereo_output.disparity_pixels, self.input.calibration)
 
         self.stereo_methods_output[name] = stereo_output
         self._update_rendering ([name])
         self._update_runtime ()
     
+    def _depth_range_slider_changed(self, v: float):
+        self._depth_range_manually_changed = True
+        self._update_rendering()
+
     def _update_rendering (self, names_to_update=None):
         if names_to_update is None:
             names_to_update = list(self.stereo_methods_output.keys())

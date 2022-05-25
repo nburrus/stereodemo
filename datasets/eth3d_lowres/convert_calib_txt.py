@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import json
 import re
+from typing import Tuple
 
 import numpy as np
 
@@ -18,6 +19,7 @@ class Calibration:
     cx1: float
     cy: float
     baseline_meters: float
+    depth_range: Tuple[float] = (1.0, 20.0)
 
     def to_json(self):
         return json.dumps(self.__dict__)
