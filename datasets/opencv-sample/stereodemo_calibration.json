@@ -1,0 +1,12 @@
+{
+    "comment": "Calibration made up manually for the results to look good.",
+    "width": 1282,
+    "height": 1110,
+    "fx": 1025.6,
+    "fy": 1025.6,
+    "cx0": 641,
+    "cx1": 641,
+    "cy": 555,
+    "baseline_meters": 0.0599101,
+    "depth_range": [0.3, 2.0]
+}
