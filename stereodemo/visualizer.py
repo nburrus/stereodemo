@@ -384,6 +384,15 @@ class Visualizer:
         stereo_output = self.executor_future.result()
         self.executor_future = None
 
+        x0,y0,x1,y1 = self.input.calibration.left_image_rect_normalized
+        x0 = int(x0*stereo_output.disparity_pixels.shape[1] + 0.5)
+        x1 = int(x1*stereo_output.disparity_pixels.shape[1] + 0.5)
+        y0 = int(y0*stereo_output.disparity_pixels.shape[0] + 0.5)
+        y1 = int(y1*stereo_output.disparity_pixels.shape[0] + 0.5)
+        valid_mask = np.zeros(stereo_output.disparity_pixels.shape, dtype=np.uint8)
+        valid_mask[y0:y1, x0:x1] = 1
+        stereo_output.disparity_pixels[valid_mask == 0] = -1.0
+
         name = self.algo_list.selected_value
         show_color_disparity (name, stereo_output.disparity_pixels, self.input.calibration)
 

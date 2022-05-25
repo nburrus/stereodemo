@@ -8,5 +8,5 @@
     "cx1": 299.03839111328125,
     "cy": 255.16502380371094,
     "depth_range": [0.5, 5.0],
-    "left_image_rect_normalized": [0, 0, 1, 1]
+    "left_image_rect_normalized": [0, 0.0417, 0.9547, 1]
 }
