@@ -26,7 +26,7 @@ models_path = Path(tempfile.gettempdir()) / 'models'
 models_path.mkdir(parents=True, exist_ok=True)
 config = Config(models_path)
 
-class TestOpenCVBM(unittest.TestCase):
+class TestStereoInference(unittest.TestCase):
 
     def check_method(self, method: StereoMethod, expected_median: float, expected_coverage: float):
         output = method.compute_disparity (input)

@@ -107,9 +107,14 @@ class CREStereo(StereoMethod):
         if not model_path.exists():
             self._download_model (model_path)
 
+        # To try with just one CPU core.
+        # opts = onnxruntime.SessionOptions()
+        # opts.intra_op_num_threads = 1
+        # opts.inter_op_num_threads = 1
+        # opts.execution_mode = onnxruntime.ExecutionMode.ORT_SEQUENTIAL
         assert Path(model_path).exists()
         self._loaded_model_path = model_path
-        self._loaded_session = onnxruntime.InferenceSession(str(model_path), providers=['CPUExecutionProvider', 'CUDAExecutionProvider'])
+        self._loaded_session = onnxruntime.InferenceSession(str(model_path), providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
         
         # Get model info
         self.load_input_details()

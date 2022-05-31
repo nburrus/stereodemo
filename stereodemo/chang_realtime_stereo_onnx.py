@@ -90,4 +90,4 @@ class ChangRealtimeStereoOnnx(StereoMethod):
 
         assert Path(model_path).exists()
         self._loaded_model_path = model_path
-        self._loaded_session = onnxruntime.InferenceSession(str(model_path), providers=['CPUExecutionProvider', 'CUDAExecutionProvider'])
+        self._loaded_session = onnxruntime.InferenceSession(str(model_path), providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])

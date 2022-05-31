@@ -21,6 +21,44 @@ rtstereo_model = sys.argv[2]
 sys.path.insert(0, rtstereo_dir)
 from models import RTStereoNet
 
+def b2mb(x): return (x/2**20)
+
+class StereodemoPerformanceMonitor:
+    def __init__(self, name, load_model, do_inference, is_gpu: bool):
+        self.load_model = load_model
+        self.do_inference = do_inference
+        self.is_gpu = is_gpu
+        self.name = name
+
+    def run (self):
+        import time
+        model = self.load_model ()
+        timings = []
+        for i in range (0, 5):
+            tstart = time.time ()
+            self.do_inference (model)
+            tend = time.time ()
+            dt = tend - tstart
+            timings.append (dt)
+            print (f'{dt=}')
+        print (f'{self.name}: timings {timings}')
+        
+        if self.is_gpu:
+            import gc
+            peak_memory_inference_mb = []
+            for i in range (0, 5):
+                gc.collect ()
+                torch.cuda.empty_cache()
+                torch.cuda.reset_max_memory_allocated() # reset the peak gauge to zero
+                model = self.load_model ()
+                peak_after_load = torch.cuda.max_memory_allocated()
+                self.do_inference (model)
+                peak_after_inference = torch.cuda.max_memory_allocated()
+                print (f'{peak_after_load=}', peak_after_load)
+                print (f'{peak_after_inference=}', peak_after_inference)
+                peak_memory_inference_mb.append (b2mb(peak_after_inference))
+            print (f'{self.name}: peak memory (MB) {peak_memory_inference_mb}')
+
 def save_torchscript(net, output_file, device):
     scripted_module = torch.jit.script(net)
     # net = net.to(device)
@@ -49,7 +87,7 @@ def show_color_disparity (name: str, disparity_map: np.ndarray):
     disparity_color = cv2.applyColorMap(cv2.convertScaleAbs(norm_disparity_map, 1), cv2.COLORMAP_MAGMA)
     cv2.imshow (name, disparity_color)
 
-if __name__ == "__main__":
+def export_models ():
     checkpoint_file = rtstereo_model
     net = RTStereoNet(maxdisp=192, device='cpu')
     checkpoint = torch.load(checkpoint_file)
@@ -111,8 +149,9 @@ if __name__ == "__main__":
     device = torch.device('cpu')
     for w,h in [(1280, 720), (640,480), (320,240), (160,128)]:
         sample_input = (torch.zeros(1,3,h,w).to(device), torch.zeros(1,3,h,w).to(device))
-        scripted_module = torch.jit.trace(net, sample_input)
-        torch.jit.save(scripted_module, f"chang-realtime-stereo-cpu-{w}x{h}.scripted.pt")
+        with torch.no_grad():
+            scripted_module = torch.jit.trace(net, sample_input)
+            torch.jit.save(scripted_module, f"chang-realtime-stereo-cpu-{w}x{h}.scripted.pt")
 
         # Need opset16 for grid sampling, currently needs pytorch nightly to do it (1.11 won't).
         # However the exported onnx fails to run:
@@ -133,3 +172,35 @@ if __name__ == "__main__":
                         #             'right' : {0 : 'batch_size', 2 : 'width', 3 : 'height' },
                         #             'output' : {0 : 'batch_size', 2 : 'width', 3 : 'height'}})
     # save_onnx(scripted_module, "chang-realtime-stereo-cpu.onnx")
+
+def benchmark_model(name, size, device):
+    w, h = size
+    is_gpu = (device == 'cuda')
+
+    def load_model ():
+        checkpoint_file = rtstereo_model
+        net = RTStereoNet(maxdisp=192, device=device)
+        checkpoint = torch.load(checkpoint_file)
+        net.load_state_dict(checkpoint['state_dict'])
+        net.eval()
+        net = net.to (device)
+        return net
+
+    def do_inference (model):
+        with torch.no_grad():
+            sample_input = (torch.zeros(1, 3, h, w).to(device), torch.zeros(1, 3, h, w).to(device))
+            outputs = model (*sample_input)
+            print (type(outputs))
+    
+    monitor = StereodemoPerformanceMonitor(f'{name}_{device}_{w}x{h}', load_model, do_inference, is_gpu)
+    monitor.run ()
+  
+
+if __name__ == "__main__":
+    export_models ()
+    
+    # torch.set_num_threads(1)
+    # for s in [(320,240), (640,480), (1280,720)]:
+    #     benchmark_model ('chang', s, 'cpu')
+
+    
