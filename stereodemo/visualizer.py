@@ -419,6 +419,8 @@ class Visualizer:
         if names_to_update is None:
             names_to_update = list(self.stereo_methods_output.keys())
 
+        selected_name = self.algo_list.selected_value
+
         for name in names_to_update:
             stereo_output = self.stereo_methods_output[name]
             if stereo_output.disparity_pixels is None:
@@ -429,13 +431,15 @@ class Visualizer:
             if self._scene.scene.has_geometry(name):
                 self._scene.scene.remove_geometry(name)
 
+            self._scene.scene.show_geometry(name, name == selected_name)
+
             o3d_color = o3d.geometry.Image(cv2.cvtColor(stereo_output.color_image_bgr, cv2.COLOR_BGR2RGB))
             o3d_depth = o3d.geometry.Image(depth_meters)
             rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(o3d_color,
-                                                                    o3d_depth,
-                                                                    1,
-                                                                    depth_trunc=self.depth_range_slider.int_value,
-                                                                    convert_rgb_to_intensity=False)
+                                                                      o3d_depth,
+                                                                      1,
+                                                                      depth_trunc=self.depth_range_slider.int_value,
+                                                                      convert_rgb_to_intensity=False)
             stereo_output.point_cloud = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.o3dCameraIntrinsic)
             stereo_output.point_cloud.transform([[1,0,0,0],[0,-1,0,0],[0,0,-1,0],[0,0,0,1]])
             self._scene.scene.add_geometry(name, stereo_output.point_cloud, rendering.MaterialRecord())
