@@ -59,6 +59,7 @@ class StereoOutput:
     color_image_bgr: np.ndarray
     computation_time: float
     point_cloud: Any = None
+    disparity_color: np.ndarray = None
 
 @dataclass
 class IntParameter:

@@ -14,14 +14,22 @@ import open3d.visualization.rendering as rendering
 
 from .methods import IntParameter, EnumParameter, StereoOutput, StereoMethod, Calibration, InputPair
    
-def show_color_disparity (name: str, disparity_map: np.ndarray, calibration: Calibration):
+disparity_window = None
+
+def color_disparity (disparity_map: np.ndarray, calibration: Calibration):
     min_disp = (calibration.fx * calibration.baseline_meters) / calibration.depth_range[1]
     # disparity_pixels = (calibration.fx * calibration.baseline_meters) / depth_meters
     max_disp = (calibration.fx * calibration.baseline_meters) / calibration.depth_range[0]
     norm_disparity_map = 255*((disparity_map-min_disp) / (max_disp-min_disp))
     disparity_color = cv2.applyColorMap(cv2.convertScaleAbs(norm_disparity_map, 1), cv2.COLORMAP_VIRIDIS)
-    cv2.namedWindow (name, cv2.WINDOW_KEEPRATIO)
-    cv2.imshow (name, disparity_color)
+    return disparity_color
+
+def show_color_disparity (name: str, color_disparity: np.ndarray):
+    global disparity_window
+    if disparity_window is None:
+        disparity_window = cv2.namedWindow ("Disparity", cv2.WINDOW_KEEPRATIO)
+    cv2.imshow ("Disparity", color_disparity)
+    cv2.setWindowTitle ("Disparity", name)
 
 class Settings:
     def __init__(self):
@@ -340,6 +348,8 @@ class Visualizer:
         self._apply_settings()
         if self.stereo_methods_output[name].disparity_pixels is None:
             self._run_current_method ()
+        if self.stereo_methods_output[name].disparity_color is not None:
+            show_color_disparity (name, self.stereo_methods_output[name].disparity_color)
 
     def _on_show_axes(self, show):
         self.settings.show_axes = show
@@ -394,7 +404,8 @@ class Visualizer:
         stereo_output.disparity_pixels[valid_mask == 0] = -1.0
 
         name = self.algo_list.selected_value
-        show_color_disparity (name, stereo_output.disparity_pixels, self.input.calibration)
+        stereo_output.disparity_color = color_disparity (stereo_output.disparity_pixels, self.input.calibration)
+        show_color_disparity (name, stereo_output.disparity_color)
 
         self.stereo_methods_output[name] = stereo_output
         self._update_rendering ([name])
