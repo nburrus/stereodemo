@@ -21,7 +21,7 @@ Small Python utility to **compare and visualize** the output of various **stereo
 - [STereo TRansformers](https://github.com/mli0603/stereo-transformer): "Revisiting Stereo Depth Estimation From a Sequence-to-Sequence Perspective with Transformers" (ICCV 2021)
 - [Chang et al. RealtimeStereo](https://github.com/JiaRenChang/RealtimeStereo): "Attention-Aware Feature Aggregation for Real-time Stereo Matching on Edge Devices" (ACCV 2020)
 
-See below for more details / credits to get each of these working.
+See below for more details / credits to get each of these working, and check this [blog post for more results, including performance numbers](https://nicolas.burrus.name/stereo-comparison/).
 
 https://user-images.githubusercontent.com/541507/169557430-48e62510-60c2-4a2b-8747-f9606e405f74.mp4
 
