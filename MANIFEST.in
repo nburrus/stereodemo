@@ -1,0 +1,11 @@
+include LICENSE
+include README.md
+recursive-exclude * .vscode
+recursive-exclude * .github
+recursive-exclude * __pycache__
+recursive-exclude datasets/drivingstereo *
+recursive-exclude datasets/eth3d_lowres *
+recursive-exclude datasets/kitti2015 *
+recursive-exclude datasets/middlebury_2014 *
+recursive-exclude datasets/opencv-sample *
+recursive-exclude datasets/sceneflow *

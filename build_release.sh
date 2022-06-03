@@ -1,12 +1,13 @@
-#!/bin/bash
+#!/bin/zsh
 
-rm -f stereodemo/datasets
+rm -rf stereodemo/datasets
+mkdir stereodemo/datasets
 
-cd stereodemo
-ln -sf ../datasets .
-cd ..
+pushd stereodemo/datasets
+ln -sf ../../datasets/oak-d .
+popd
 
 rm -f dist/*
 python3 -m build
 
-rm -f stereodemo/datasets
+rm -rf stereodemo/datasets
