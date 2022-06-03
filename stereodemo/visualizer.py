@@ -189,7 +189,10 @@ class Visualizer:
         self._on_algo_list_selected(self.algo_list.selected_value, False)
         self._apply_settings()
 
-        self.read_next_pair ()
+        if self.source.is_live():
+            self.read_next_pair ()
+        else:
+            self._image_selected (None, None)
 
     def _on_key_pressed (self, keyEvent):
         if keyEvent.key == gui.KeyName.Q:

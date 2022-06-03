@@ -173,8 +173,12 @@ def main():
         source = OakdSource(args.oak_output_folder)
         method_list = [StereoFromOakInputSource(config)] + method_list
     else:
-        print ("You need to specify --oak or provide images")
-        sys.exit (1)
+        datasets_path = Path(__file__).parent / 'datasets'
+        if not datasets_path.exists():
+            print (f"Tried but failed to find files in {datasets_path}")
+            print ("You need to specify --oak or provide images")
+            sys.exit (1)
+        source = FileListSource([datasets_path], args.calibration)
 
     method_dict = { method.name:method for method in method_list } 
 

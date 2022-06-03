@@ -47,7 +47,12 @@ Then click on `Next Image` to capture a new one.
 
 ### With image files
 
-For convenience a tiny subset of some popular datasets is included in this repository. Just provide a folder to `stereodemo` and it'll look for left/right pairs (either im0/im1 or left/right in the names):
+If you installed stereodemo from pip, then just launch `stereodemo` and it will
+show some embedded sample images captured with an OAK-D camera.
+
+A tiny subset of some popular datasets is also included in this repository. Just
+provide a folder to `stereodemo` and it'll look for left/right pairs (either
+im0/im1 or left/right in the names):
 
 ```
 # To evaluate on the oak-d images

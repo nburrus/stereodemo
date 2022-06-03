@@ -3,8 +3,7 @@
 - Bump the version numbers in `setup.cfg` and `stereodemo/__init__.py`
 
 ```
-rm dist/*
-python3 -m build
+./build_release.sh
 twine upload dist/*
 ```
 
