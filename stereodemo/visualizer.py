@@ -434,7 +434,6 @@ class Visualizer:
             if self._scene.scene.has_geometry(name):
                 self._scene.scene.remove_geometry(name)
 
-            self._scene.scene.show_geometry(name, name == selected_name)
 
             o3d_color = o3d.geometry.Image(cv2.cvtColor(stereo_output.color_image_bgr, cv2.COLOR_BGR2RGB))
             o3d_depth = o3d.geometry.Image(depth_meters)
@@ -446,6 +445,7 @@ class Visualizer:
             stereo_output.point_cloud = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.o3dCameraIntrinsic)
             stereo_output.point_cloud.transform([[1,0,0,0],[0,-1,0,0],[0,0,-1,0],[0,0,0,1]])
             self._scene.scene.add_geometry(name, stereo_output.point_cloud, rendering.MaterialRecord())
+            self._scene.scene.show_geometry(name, name == selected_name)
     
     def _run_current_method(self):
         if self.executor_future is not None:
