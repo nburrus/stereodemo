@@ -27,6 +27,7 @@
             "justMyCode": false,
             "args": [
                 "datasets",
+                "--models-path", "models"
             ]
         },
     ]

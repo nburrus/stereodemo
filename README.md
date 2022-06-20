@@ -21,6 +21,8 @@ Small Python utility to **compare and visualize** the output of various **stereo
 - [STereo TRansformers](https://github.com/mli0603/stereo-transformer): "Revisiting Stereo Depth Estimation From a Sequence-to-Sequence Perspective with Transformers" (ICCV 2021)
 - [Chang et al. RealtimeStereo](https://github.com/JiaRenChang/RealtimeStereo): "Attention-Aware Feature Aggregation for Real-time Stereo Matching on Edge Devices" (ACCV 2020)
 
+- [DistDepth](https://github.com/facebookresearch/DistDepth): "Toward Practical Monocular Indoor Depth Estimation" (CVPR 2022). This one is actually a **monocular** method, only using the left image.
+
 See below for more details / credits to get each of these working, and check this [blog post for more results, including performance numbers](https://nicolas.burrus.name/stereo-comparison/).
 
 https://user-images.githubusercontent.com/541507/169557430-48e62510-60c2-4a2b-8747-f9606e405f74.mp4
@@ -109,6 +111,10 @@ I did not implement any of these myself, but just collected pre-trained models o
 - Chang et al. RealtimeStereo
   - Official implementation and pre-trained models: https://github.com/JiaRenChang/RealtimeStereo
   - I exported the pytorch implementation to torch script via tracing with some minor changes to the code https://github.com/JiaRenChang/RealtimeStereo/pull/15 . See [chang_realtimestereo_to_torchscript_onnx.py](tools/chang_realtimestereo_to_torchscript_onnx.py).
+
+- DistDepth
+  - Official implementation and pre-trained models https://github.com/facebookresearch/DistDepth
+  - I exported the pytorch implementaton to torch script via tracing, see [the changes](https://github.com/facebookresearch/DistDepth/commit/fde3b427ef2ff31c34f08e99c51c8e6a2427b720).
 
 # License
 

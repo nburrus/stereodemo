@@ -118,3 +118,11 @@ class StereoMethod:
         depth_meters[disparity_pixels < 0.] = -1.0
         np.seterr(**old_seterr)
         return depth_meters
+
+    def disparity_from_depth_meters(depth_meters: np.ndarray, calibration: Calibration):
+        old_seterr = np.seterr(divide='ignore')
+        dcx = np.float32(calibration.cx0 - calibration.cx1)
+        disparity_pixels = (np.float32(calibration.baseline_meters * calibration.fx) / depth_meters) + dcx
+        disparity_pixels = np.nan_to_num(disparity_pixels)
+        np.seterr(**old_seterr)
+        return disparity_pixels

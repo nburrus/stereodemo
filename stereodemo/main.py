@@ -11,6 +11,7 @@ import numpy as np
 
 import cv2
 
+
 from . import visualizer
 from . import methods
 
@@ -20,6 +21,7 @@ from .method_cre_stereo import CREStereo
 from .method_chang_realtime_stereo import ChangRealtimeStereo
 from .method_hitnet import HitnetStereo
 from .method_sttr import StereoTransformers
+from stereodemo.method_dist_depth import DistDepth
 
 def parse_args():
     import argparse
@@ -164,6 +166,7 @@ def main():
         HitnetStereo(config),
         StereoTransformers(config),
         ChangRealtimeStereo(config),
+        DistDepth(config)
     ]
 
     if args.images:
