@@ -15,6 +15,8 @@ import cv2
 
 from torchvision import transforms
 
+from .visualizer import imshow
+
 rtstereo_dir = sys.argv[1]
 rtstereo_model = sys.argv[2]
 
@@ -85,7 +87,7 @@ def show_color_disparity (name: str, disparity_map: np.ndarray):
     max_disp = 64
     norm_disparity_map = 255*((disparity_map-min_disp) / (max_disp-min_disp))
     disparity_color = cv2.applyColorMap(cv2.convertScaleAbs(norm_disparity_map, 1), cv2.COLORMAP_MAGMA)
-    cv2.imshow (name, disparity_color)
+    imshow (name, disparity_color)
 
 def export_models ():
     checkpoint_file = rtstereo_model

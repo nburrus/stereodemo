@@ -1,6 +1,6 @@
 import copy
 import time
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 from abc import abstractmethod
 from concurrent.futures import ThreadPoolExecutor
@@ -16,6 +16,42 @@ from .methods import IntParameter, EnumParameter, StereoOutput, StereoMethod, Ca
    
 disparity_window = None
 
+class ImageWindow:
+    def __init__(self, name: str, size: Tuple[int, int]):
+        self.name = name
+        self.window = gui.Application.instance.create_window(name, size[0], size[1])
+        self.image_widget = gui.ImageWidget()
+        self.window.add_child(self.image_widget)
+
+    def update_image(self, image: np.ndarray):
+        image_geom = o3d.geometry.Image(image)
+        self.image_widget.update_image(image_geom)
+        self.window.post_redraw()
+
+class ImageWindowsManager:
+    def __init__(self):
+        self.windows_by_name = {}
+
+    def imshow(self, name: str, image: np.ndarray, window_title: Optional[str], max_size: int):
+        if name not in self.windows_by_name:
+            rows, cols, _ = image.shape
+            if cols > rows:
+                initial_size = max_size, int(max_size * rows / cols)            
+            else:
+                initial_size = int(max_size * cols / rows), max_size
+            self.windows_by_name[name] = ImageWindow(name, initial_size)
+        self.windows_by_name[name].update_image(image)
+        if window_title is not None:
+            self.windows_by_name[name].title = window_title
+
+image_windows_manager = ImageWindowsManager()
+
+def imshow (name: str, image: np.ndarray, window_title=None, max_size=640):
+    global image_windows_manager
+    if image_windows_manager is None:
+        image_windows_manager = ImageWindowsManager()
+    image_windows_manager.imshow(name, image, window_title, max_size)
+
 def color_disparity (disparity_map: np.ndarray, calibration: Calibration):
     min_disp = (calibration.fx * calibration.baseline_meters) / calibration.depth_range[1]
     # disparity_pixels = (calibration.fx * calibration.baseline_meters) / depth_meters
@@ -25,11 +61,7 @@ def color_disparity (disparity_map: np.ndarray, calibration: Calibration):
     return disparity_color
 
 def show_color_disparity (name: str, color_disparity: np.ndarray):
-    global disparity_window
-    if disparity_window is None:
-        disparity_window = cv2.namedWindow ("Disparity", cv2.WINDOW_KEEPRATIO)
-    cv2.imshow ("Disparity", color_disparity)
-    cv2.setWindowTitle ("Disparity", name)
+    imshow ("StereoDemo - Disparity", color_disparity, name)
 
 class Settings:
     def __init__(self):
@@ -74,7 +106,7 @@ class Visualizer:
         self.input = InputPair (None, None, None, None)
         self._downsample_factor = 0
 
-        self.window = gui.Application.instance.create_window("Stereo Demo", 1280, 1024)
+        self.window = gui.Application.instance.create_window("StereoDemo", 1280, 1024)
         w = self.window  # to make the code more concise
 
         self.settings = Settings()
@@ -230,8 +262,8 @@ class Visualizer:
         if not self._depth_range_manually_changed:
             self.depth_range_slider.double_value = input.calibration.depth_range[1]
 
-        cv2.namedWindow ("Input image", cv2.WINDOW_KEEPRATIO)
-        cv2.imshow ("Input image", np.hstack([input.left_image, input.right_image]))
+        imshow ("StereoDemo - Input image", np.hstack([input.left_image, input.right_image]))
+        
         self.input = input
         self.input_status.text = f"Input: {input.left_image.shape[1]}x{input.left_image.shape[0]} " + input.status
 
