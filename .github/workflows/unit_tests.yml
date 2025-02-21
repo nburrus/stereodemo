@@ -7,13 +7,12 @@ jobs:
       matrix:
         os: ['ubuntu-latest', 'windows-latest', 'macos-latest']
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         lfs: true
-    - uses: actions/setup-python@v3
+    - uses: actions/setup-python@v5
       with:
-        python-version: '3.8'
-        architecture: 'x64'
+        python-version: '3.11'
     - name: Install the library
       run: |
         pip install .
