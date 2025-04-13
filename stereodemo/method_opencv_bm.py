@@ -23,7 +23,7 @@ class StereoBM(StereoMethod):
         # https://learnopencv.com/depth-perception-using-stereo-camera-python-c/
         self.parameters.update ({
             "Num Disparities": IntParameter("Number of disparities (pixels)", 128, 16, 640, to_valid=multiple_of_16),
-            "Block Size": IntParameter("Kernel size for block matching (odd)", 9, 3, 63, to_valid=odd_only),
+            "Block Size": IntParameter("Kernel size for block matching (odd)", 9, 5, 63, to_valid=odd_only),
             "TextureThreshold": IntParameter("Minimum SAD to consider the texture sufficient", 10, 0, 100),
             "Uniqueness Ratio": IntParameter("How unique the match each for each pixel", 15, 0, 100),
             "SpeckleWindowSize": IntParameter("Speckle window size in pixels (filter small objects). 0 to disable.", 100, 0, 1000),
