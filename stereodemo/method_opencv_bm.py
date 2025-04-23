@@ -48,8 +48,8 @@ class StereoBM(StereoMethod):
         stereoBM.setPreFilterCap(self.parameters['PreFilterCap'].value)
         stereoBM.setPreFilterSize(self.parameters['PreFilterSize'].value)
 
-        gray_left = cv2.cvtColor(left_image, cv2.COLOR_BGR2GRAY, left_image)
-        gray_right = cv2.cvtColor(right_image, cv2.COLOR_BGR2GRAY, right_image)
+        gray_left = cv2.cvtColor(left_image, cv2.COLOR_BGR2GRAY)
+        gray_right = cv2.cvtColor(right_image, cv2.COLOR_BGR2GRAY)
         # OpenCV returns 16x the disparity in pixels
         start = time.time()
         disparity = stereoBM.compute(gray_left, gray_right) / np.float32(16.0)
