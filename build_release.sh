@@ -8,6 +8,7 @@ ln -sf ../../datasets/oak-d .
 popd
 
 rm -f dist/*
+pip install build
 python3 -m build
 
 rm -rf stereodemo/datasets
