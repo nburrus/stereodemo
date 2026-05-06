@@ -16,6 +16,8 @@ from . import visualizer
 from . import methods
 
 from .method_opencv_bm import StereoBM, StereoSGBM
+from .method_opencv_cuda_bp import StereoCudaBP
+from .method_opencv_cuda_csbp import StereoCudaCSBP
 from .method_raft_stereo import RaftStereo
 from .method_cre_stereo import CREStereo
 from .method_chang_realtime_stereo import ChangRealtimeStereo
@@ -161,6 +163,8 @@ def main():
     method_list = [
         StereoBM(config),
         StereoSGBM(config),
+        StereoCudaBP(config),
+        StereoCudaCSBP(config),
         CREStereo(config),
         RaftStereo(config),
         HitnetStereo(config),
