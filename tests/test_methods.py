@@ -14,6 +14,8 @@ from stereodemo import method_hitnet
 from stereodemo import method_cre_stereo
 from stereodemo import method_raft_stereo
 from stereodemo import method_sttr
+from stereodemo import method_opencv_cuda_bp
+from stereodemo import method_opencv_cuda_csbp
 from stereodemo.methods import Config, InputPair, Calibration, StereoOutput, StereoMethod
 
 data_folder = Path(__file__).parent.parent / 'datasets' / 'eth3d_lowres' / 'delivery_area_1l'
@@ -27,6 +29,10 @@ models_path.mkdir(parents=True, exist_ok=True)
 config = Config(models_path)
 
 class TestStereoInference(unittest.TestCase):
+
+    @staticmethod
+    def _opencv_cuda_available() -> bool:
+        return hasattr(cv2, "cuda") and cv2.cuda.getCudaEnabledDeviceCount() > 0
 
     def check_method(self, method: StereoMethod, expected_median: float, expected_coverage: float):
         output = method.compute_disparity (input)
@@ -66,6 +72,16 @@ class TestStereoInference(unittest.TestCase):
         m = method_sttr.StereoTransformers(config)
         m.parameters["Shape"].set_value ("640x480 (ds3)")
         self.check_method (m, 7.4636, 0.9869)
+
+    def test_cuda_bp(self):
+        if not self._opencv_cuda_available():
+            self.skipTest("OpenCV CUDA is not available")
+        self.check_method (method_opencv_cuda_bp.StereoCudaBP(config), 5.0, 0.9)
+
+    def test_cuda_csbp(self):
+        if not self._opencv_cuda_available():
+            self.skipTest("OpenCV CUDA is not available")
+        self.check_method (method_opencv_cuda_csbp.StereoCudaCSBP(config), 6.0, 0.9)
 
 if __name__ == '__main__':
     unittest.main()

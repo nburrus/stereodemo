@@ -25,16 +25,22 @@ class StereoCudaBP(StereoMethod):
 
     def compute_disparity(self, input: InputPair) -> StereoOutput:
         if cv2.cuda.getCudaEnabledDeviceCount() == 0:
-            raise RuntimeError("No CUDA-enabled GPU detected. OpenCV CUDA BP requires a CUDA-capable device.")
+            raise RuntimeError("CUDA-capable device not available or OpenCV not compiled with CUDA support.")
 
         msg_type = cv2.CV_32F if self.parameters['Msg Type'].index == 0 else cv2.CV_16S
+        h, w = input.left_image.shape[:2]
+        max_levels = max(1, (min(h, w) // 3).bit_length())
+        levels = min(self.parameters['Num Levels'].value, max_levels)
         stereo = cv2.cuda.createStereoBeliefPropagation(
             ndisp=self.parameters['Num Disparities'].value,
             iters=self.parameters['Num Iterations'].value,
-            levels=self.parameters['Num Levels'].value,
+            levels=levels,
             msg_type=msg_type,
         )
-        stereo.setMaxDataTerm(self.parameters['Max Data Term x10'].value / 10.0)
+        max_data_term = self.parameters['Max Data Term x10'].value / 10.0
+        if msg_type == cv2.CV_16S:
+            max_data_term = min(max_data_term, (np.iinfo(np.int16).max - 1) / (10.0 * (1 << (levels - 1))))
+        stereo.setMaxDataTerm(max_data_term)
         stereo.setDataWeight(self.parameters['Data Weight x1000'].value / 1000.0)
         stereo.setMaxDiscTerm(self.parameters['Max Disc Term x10'].value / 10.0)
         stereo.setDiscSingleJump(self.parameters['Disc Single Jump x10'].value / 10.0)
@@ -44,9 +50,11 @@ class StereoCudaBP(StereoMethod):
         gpu_left.upload(input.left_image)
         gpu_right.upload(input.right_image)
 
+        stream = cv2.cuda.Stream()
         start = time.time()
-        gpu_disparity = stereo.compute(gpu_left, gpu_right)
-        disparity = gpu_disparity.download().astype(np.float32)
+        gpu_disparity = stereo.compute(gpu_left, gpu_right, stream)
+        stream.waitForCompletion()
         elapsed = time.time() - start
+        disparity = gpu_disparity.download().astype(np.float32)
 
         return StereoOutput(disparity, input.left_image, elapsed)
