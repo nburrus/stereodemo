@@ -1,0 +1,15 @@
+[
+  {
+    "label": "StereoDemo: OAK-D donkey toy",
+    "adapter": "Debugpy",
+    "request": "launch",
+    "module": "stereodemo",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "args": [
+      "datasets/oak-d/donkey_toy_left.png",
+      "datasets/oak-d/donkey_toy_right.png",
+      "--models-path",
+      "models"
+    ]
+  }
+]
