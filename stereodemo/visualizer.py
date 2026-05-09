@@ -426,25 +426,33 @@ class Visualizer:
             self.window.close_dialog ()
         self._progress_dialog = None
 
-        stereo_output = self.executor_future.result()
+        result = self.executor_future.result()
         self.executor_future = None
+        if isinstance(result, Exception):
+            self._show_error_dialog("Failed to load or compute results", str(result))
+            return
 
-        x0,y0,x1,y1 = self.input.calibration.left_image_rect_normalized
-        x0 = int(x0*stereo_output.disparity_pixels.shape[1] + 0.5)
-        x1 = int(x1*stereo_output.disparity_pixels.shape[1] + 0.5)
-        y0 = int(y0*stereo_output.disparity_pixels.shape[0] + 0.5)
-        y1 = int(y1*stereo_output.disparity_pixels.shape[0] + 0.5)
-        valid_mask = np.zeros(stereo_output.disparity_pixels.shape, dtype=np.uint8)
-        valid_mask[y0:y1, x0:x1] = 1
-        stereo_output.disparity_pixels[valid_mask == 0] = -1.0
+        stereo_output = result
 
-        name = self.algo_list.selected_value
-        stereo_output.disparity_color = color_disparity (stereo_output.disparity_pixels, self.input.calibration)
-        show_color_disparity (name, stereo_output.disparity_color)
+        try:
+            x0,y0,x1,y1 = self.input.calibration.left_image_rect_normalized
+            x0 = int(x0*stereo_output.disparity_pixels.shape[1] + 0.5)
+            x1 = int(x1*stereo_output.disparity_pixels.shape[1] + 0.5)
+            y0 = int(y0*stereo_output.disparity_pixels.shape[0] + 0.5)
+            y1 = int(y1*stereo_output.disparity_pixels.shape[0] + 0.5)
+            valid_mask = np.zeros(stereo_output.disparity_pixels.shape, dtype=np.uint8)
+            valid_mask[y0:y1, x0:x1] = 1
+            stereo_output.disparity_pixels[valid_mask == 0] = -1.0
 
-        self.stereo_methods_output[name] = stereo_output
-        self._update_rendering ([name])
-        self._update_runtime ()
+            name = self.algo_list.selected_value
+            stereo_output.disparity_color = color_disparity (stereo_output.disparity_pixels, self.input.calibration)
+            show_color_disparity (name, stereo_output.disparity_color)
+
+            self.stereo_methods_output[name] = stereo_output
+            self._update_rendering ([name])
+            self._update_runtime ()
+        except Exception as e:
+            self._show_error_dialog("Failed to load or compute results", str(e))
     
     def _depth_range_slider_changed(self, v: float):
         self._depth_range_manually_changed = True
@@ -489,11 +497,31 @@ class Visualizer:
         name = self.algo_list.selected_value
 
         def do_beefy_work():
-            stereo_output = self.stereo_methods[name].compute_disparity (self.input)
-            return stereo_output
+            try:
+                stereo_output = self.stereo_methods[name].compute_disparity (self.input)
+                return stereo_output
+            except Exception as e:
+                return e
 
         self._last_progress_update_time = time.time()
         self.executor_future = self.executor.submit (do_beefy_work)
+
+    def _show_error_dialog(self, title, message):
+        dlg = gui.Dialog(title)
+
+        em = self.window.theme.font_size
+        dlg_layout = gui.Vert(em, gui.Margins(em, em, em, em))
+        dlg_layout.add_child(gui.Label(message or "Unknown error"))
+
+        ok = gui.Button("Ok")
+        ok.set_on_clicked(self.window.close_dialog)
+        button_layout = gui.Horiz(em)
+        button_layout.add_stretch()
+        button_layout.add_child(ok)
+        dlg_layout.add_child(button_layout)
+
+        dlg.add_child(dlg_layout)
+        self.window.show_dialog(dlg)
     
     def _show_progress_dialog(self, title, message):
         # A Dialog is just a widget, so you make its child a layout just like
