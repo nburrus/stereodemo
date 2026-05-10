@@ -22,6 +22,7 @@ Small Python utility to **compare and visualize** the output of various **stereo
 - [Chang et al. RealtimeStereo](https://github.com/JiaRenChang/RealtimeStereo): "Attention-Aware Feature Aggregation for Real-time Stereo Matching on Edge Devices" (ACCV 2020)
 
 - [DistDepth](https://github.com/facebookresearch/DistDepth): "Toward Practical Monocular Indoor Depth Estimation" (CVPR 2022). This one is actually a **monocular** method, only using the left image.
+- [Depth Anything V3](https://github.com/DepthAnything/Depth-Anything-V3): metric monocular depth estimation. This uses the [DA3METRIC-LARGE ONNX export](https://huggingface.co/TillBeemelmanns/Depth-Anything-V3-ONNX), only using the left image.
 
 - [DUSt3R](https://github.com/naver/dust3r): "Geometric 3D Vision Made Easy" (CVPR 2024). Dense Unconstrained Stereo 3D Reconstruction using a ViT-Large encoder/cross-attention decoder pair. Weights are ~2.3 GB and downloaded on first use. **Non-commercial only (CC BY-NC-SA 4.0).**
 
@@ -141,6 +142,14 @@ I did not implement any of these myself, but just collected pre-trained models o
   - Minimal inference code adapted from: https://github.com/ibaiGorordo/dust3r-pytorch-inference-minimal
   - DUSt3R predicts 3D point maps rather than stereo disparity. This adapter estimates DUSt3R's implicit focal length from the left point map and the predicted baseline from the right point map (assuming a rectified pair), then uses `f_dust3r * b_dust3r / Z_dust3r` directly as the pixel disparity. No metric-scale recovery via the user's calibration is needed for the disparity output.
   - The official DUSt3R code and checkpoints are licensed under CC BY-NC-SA 4.0.
+
+- Depth Anything V3
+  - Official project: https://github.com/DepthAnything/Depth-Anything-V3
+  - ONNX model export used by stereodemo: https://huggingface.co/TillBeemelmanns/Depth-Anything-V3-ONNX
+  - Preprocessing and metric-depth postprocessing adapted from https://github.com/ika-rwth-aachen/ros2-depth-anything-v3-trt
+  - The adapter follows that postprocessing and scales raw depth from the model's 300 px reference focal length to the input calibration focal length.
+  - This is a monocular method. It predicts metric depth from the left image, then stereodemo converts that depth to disparity using the stereo calibration so it can reuse the point-cloud visualization pipeline.
+  - The model's sky output is used conservatively: when the sky mask covers most of the image, stereodemo keeps the raw depth instead of filling sky pixels, because the sky head can otherwise flatten outdoor driving scenes.
 
 # License
 

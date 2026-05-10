@@ -25,6 +25,7 @@ from .method_hitnet import HitnetStereo
 from .method_sttr import StereoTransformers
 from stereodemo.method_dist_depth import DistDepth
 from stereodemo.method_dust3r import DUSt3R
+from .method_depth_anything_v3 import DepthAnythingV3
 
 def parse_args():
     import argparse
@@ -171,8 +172,9 @@ def main():
         HitnetStereo(config),
         StereoTransformers(config),
         ChangRealtimeStereo(config),
-        DistDepth(config),
         DUSt3R(config),
+        DistDepth(config),
+        DepthAnythingV3(config),
     ]
 
     if args.images:
@@ -202,5 +204,3 @@ def main():
         time_to_sleep = 1/30.0 - elapsed
         if time_to_sleep > 0:
             time.sleep (time_to_sleep)
-
-
