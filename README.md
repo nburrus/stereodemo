@@ -23,6 +23,8 @@ Small Python utility to **compare and visualize** the output of various **stereo
 
 - [DistDepth](https://github.com/facebookresearch/DistDepth): "Toward Practical Monocular Indoor Depth Estimation" (CVPR 2022). This one is actually a **monocular** method, only using the left image.
 
+- [DUSt3R](https://github.com/naver/dust3r): "Geometric 3D Vision Made Easy" (CVPR 2024). Dense Unconstrained Stereo 3D Reconstruction using a ViT-Large encoder/cross-attention decoder pair. Weights are ~2.3 GB and downloaded on first use. **Non-commercial only (CC BY-NC-SA 4.0).**
+
 See below for more details / credits to get each of these working, and check this [blog post for more results, including performance numbers](https://nicolas.burrus.name/stereo-comparison/).
 
 https://user-images.githubusercontent.com/541507/169557430-48e62510-60c2-4a2b-8747-f9606e405f74.mp4
@@ -97,6 +99,11 @@ Sample images included in this repository:
 - [pytorch](https://pytorch.org/). To run pretrained models exported as torch script.
 - [depthai](https://docs.luxonis.com/en/latest/). Optional, to grab images from a Luxonis OAK camera.
 
+DUSt3R is supported as an experimental method through a minimal local PyTorch
+inference port, so it does not require installing the official DUSt3R package.
+Its checkpoints are large, and the official code and models are licensed for
+non-commercial use only.
+
 # Credits for each method
 
 I did not implement any of these myself, but just collected pre-trained models or converted them to torch script / ONNX.
@@ -128,6 +135,12 @@ I did not implement any of these myself, but just collected pre-trained models o
 - DistDepth
   - Official implementation and pre-trained models https://github.com/facebookresearch/DistDepth
   - I exported the pytorch implementaton to torch script via tracing, see [the changes](https://github.com/facebookresearch/DistDepth/commit/fde3b427ef2ff31c34f08e99c51c8e6a2427b720).
+
+- DUSt3R
+  - Official implementation and pre-trained models: https://github.com/naver/dust3r
+  - Minimal inference code adapted from: https://github.com/ibaiGorordo/dust3r-pytorch-inference-minimal
+  - DUSt3R predicts 3D point maps rather than stereo disparity. This adapter estimates DUSt3R's implicit focal length from the left point map and the predicted baseline from the right point map (assuming a rectified pair), then uses `f_dust3r * b_dust3r / Z_dust3r` directly as the pixel disparity. No metric-scale recovery via the user's calibration is needed for the disparity output.
+  - The official DUSt3R code and checkpoints are licensed under CC BY-NC-SA 4.0.
 
 # License
 

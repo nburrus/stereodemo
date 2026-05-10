@@ -14,6 +14,7 @@ from stereodemo import method_hitnet
 from stereodemo import method_cre_stereo
 from stereodemo import method_raft_stereo
 from stereodemo import method_sttr
+from stereodemo import method_dust3r
 from stereodemo import method_opencv_cuda_bp
 from stereodemo import method_opencv_cuda_csbp
 from stereodemo.methods import Config, InputPair, Calibration, StereoOutput, StereoMethod
@@ -72,6 +73,19 @@ class TestStereoInference(unittest.TestCase):
         m = method_sttr.StereoTransformers(config)
         m.parameters["Shape"].set_value ("640x480 (ds3)")
         self.check_method (m, 7.4636, 0.9869)
+
+    def test_dust3r_optional_registration(self):
+        method_dust3r.DUSt3R(config)
+
+    def test_dust3r(self):
+        m = method_dust3r.DUSt3R(config)
+        model_path = config.models_path / m._model_filename()
+        if not model_path.exists():
+            self.skipTest("DUSt3R checkpoint is not cached")
+        output = m.compute_disparity(input)
+        self.assertEqual(output.disparity_pixels.shape, input.left_image.shape[:2])
+        valid_pixels = output.disparity_pixels[output.disparity_pixels > 0.]
+        self.assertGreater(valid_pixels.size, 0)
 
     def test_cuda_bp(self):
         if not self._opencv_cuda_available():
