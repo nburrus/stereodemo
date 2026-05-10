@@ -1,14 +1,12 @@
 #!/bin/zsh
 
-rm -rf stereodemo/datasets
-mkdir stereodemo/datasets
+set -e
 
-pushd stereodemo/datasets
-ln -sf ../../datasets/oak-d .
-popd
+rm -rf stereodemo/datasets
+mkdir -p stereodemo/datasets
+trap 'rm -rf stereodemo/datasets' EXIT
+
+ln -sf ../../datasets/oak-d stereodemo/datasets/oak-d
 
 rm -f dist/*
-pip install build
-python3 -m build
-
-rm -rf stereodemo/datasets
+uv build

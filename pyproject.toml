@@ -1,6 +1,62 @@
 [build-system]
 requires = [
-    "setuptools>=42",
-    "wheel"
+    "setuptools>=77",
+    "wheel",
 ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "stereodemo"
+version = "0.6.2"
+description = "Compare various stereo depth estimation algorithms on image files or with an OAK-D camera."
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Nicolas Burrus", email = "nicolas@burrus.name" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy",
+    "onnxruntime>=1.10.0; sys_platform == 'darwin'",
+    "onnxruntime-gpu>=1.10.0; sys_platform != 'darwin'",
+    "opencv-python",
+    "open3d>=0.15.1",
+    "torch>=1.11.0",
+    "torchvision",
+]
+
+[project.optional-dependencies]
+oak = [
+    "depthai",
+]
+
+[project.scripts]
+stereodemo = "stereodemo:main"
+
+[project.urls]
+Homepage = "https://github.com/nburrus/stereodemo"
+"Bug Tracker" = "https://github.com/nburrus/stereodemo/issues"
+
+[dependency-groups]
+dev = [
+    "build>=1.2.0",
+    "twine>=5.0.0",
+]
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["stereodemo*"]
+
+[tool.setuptools.package-data]
+stereodemo = [
+    "datasets/oak-d/*.png",
+    "datasets/oak-d/*.json",
+]
