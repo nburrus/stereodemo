@@ -24,6 +24,7 @@ from .method_chang_realtime_stereo import ChangRealtimeStereo
 from .method_hitnet import HitnetStereo
 from .method_sttr import StereoTransformers
 from stereodemo.method_dist_depth import DistDepth
+from stereodemo.method_dust3r import DUSt3R
 
 def parse_args():
     import argparse
@@ -170,7 +171,8 @@ def main():
         HitnetStereo(config),
         StereoTransformers(config),
         ChangRealtimeStereo(config),
-        DistDepth(config)
+        DistDepth(config),
+        DUSt3R(config),
     ]
 
     if args.images:
