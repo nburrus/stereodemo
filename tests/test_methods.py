@@ -17,6 +17,7 @@ from stereodemo import method_sttr
 from stereodemo import method_dust3r
 from stereodemo import method_opencv_cuda_bp
 from stereodemo import method_opencv_cuda_csbp
+from stereodemo import method_depth_anything_v3
 from stereodemo.methods import Config, InputPair, Calibration, StereoOutput, StereoMethod
 
 data_folder = Path(__file__).parent.parent / 'datasets' / 'eth3d_lowres' / 'delivery_area_1l'
@@ -96,6 +97,21 @@ class TestStereoInference(unittest.TestCase):
         if not self._opencv_cuda_available():
             self.skipTest("OpenCV CUDA is not available")
         self.check_method (method_opencv_cuda_csbp.StereoCudaCSBP(config), 6.0, 0.9)
+
+    def test_depth_anything_v3(self):
+        m = method_depth_anything_v3.DepthAnythingV3(config)
+        m.parameters["Device"].set_value("CPU")
+        output = m.compute_disparity(input)
+        self.assertEqual(output.disparity_pixels.shape, input.left_image.shape[:2])
+        self.assertTrue(np.isfinite(output.disparity_pixels).all())
+        valid_pixels = output.disparity_pixels[output.disparity_pixels > 0.]
+        coverage = valid_pixels.size / output.disparity_pixels.size
+        disparity_p01 = np.percentile(valid_pixels, 1)
+        disparity_p99 = np.percentile(valid_pixels, 99)
+        disparity_spread = disparity_p99 - disparity_p01
+        self.assertAlmostEqual(np.median(valid_pixels), 3.4663, delta=0.01)
+        self.assertAlmostEqual(coverage, 1.0, delta=0.01)
+        self.assertGreater(disparity_spread, 2.0)
 
 if __name__ == '__main__':
     unittest.main()
