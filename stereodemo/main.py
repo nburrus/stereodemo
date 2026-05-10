@@ -115,7 +115,9 @@ class FileListSource (visualizer.Source):
         if self.user_provided_calibration_path is None:
             calibration_path = left_image_path.parent / 'stereodemo_calibration.json'
             if not calibration_path.exists():
-                print (f"Warning: no calibration file found {calibration_path}. Using default calibration, the point cloud won't be accurate.")
+                calibration_path = left_image_path.parent / 'stereo_calibration.json'
+            if not calibration_path.exists():
+                print (f"Warning: no calibration file found {left_image_path.parent / 'stereodemo_calibration.json'} or {left_image_path.parent / 'stereo_calibration.json'}. Using default calibration, the point cloud won't be accurate.")
                 calibration_path = None
         else:
             calibration_path = self.user_provided_calibration_path
