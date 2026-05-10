@@ -35,6 +35,19 @@ https://user-images.githubusercontent.com/541507/169557430-48e62510-60c2-4a2b-87
 python3 -m pip install stereodemo
 ```
 
+For local development, install the locked environment with uv:
+
+```
+uv sync
+```
+
+Then run commands through uv:
+
+```
+uv run stereodemo datasets
+uv run python tests/test_methods.py
+```
+
 ## Running it
 
 ### With an OAK-D camera
@@ -121,4 +134,3 @@ I did not implement any of these myself, but just collected pre-trained models o
 The code of stereodemo is MIT licensed, but the pre-trained models are subject to the license of their respective implementation.
 
 The sample images have the license of their respective source, except for datasets/oak-d which is licenced under [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
-

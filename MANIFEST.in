@@ -1,11 +1,12 @@
 include LICENSE
 include README.md
-recursive-exclude * .vscode
-recursive-exclude * .github
+prune .vscode
+prune .zed
+prune .github
 recursive-exclude * __pycache__
-recursive-exclude datasets/drivingstereo *
-recursive-exclude datasets/eth3d_lowres *
-recursive-exclude datasets/kitti2015 *
-recursive-exclude datasets/middlebury_2014 *
-recursive-exclude datasets/opencv-sample *
-recursive-exclude datasets/sceneflow *
+prune datasets/drivingstereo
+prune datasets/eth3d_lowres
+prune datasets/kitti2015
+prune datasets/middlebury_2014
+prune datasets/opencv-sample
+prune datasets/sceneflow

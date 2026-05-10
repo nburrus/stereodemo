@@ -19,7 +19,8 @@ Core code lives in `stereodemo/`. Sample datasets live in `datasets/`. Model con
 - `datasets/`: small checked-in stereo samples and calibration JSON files.
 - `models/` and `dist/`: local/generated artifacts when present; do not treat them as canonical source unless explicitly asked.
 - `tests/test_methods.py`: unittest-based inference regression tests.
-- `setup.cfg`, `setup.py`, `pyproject.toml`: setuptools packaging configuration.
+- `pyproject.toml`: uv and setuptools packaging configuration.
+- `setup.py`: minimal compatibility shim for older editable-install workflows.
 - `build_release.sh`: release build script that temporarily symlinks `datasets/oak-d` into the package.
 
 ## Environment Setup
@@ -39,19 +40,13 @@ uv run stereodemo datasets
 uv run python tests/test_methods.py
 ```
 
-If `uv sync` is not available for the current packaging metadata, fall back to an editable install:
+CI installs from the uv lockfile with:
 
 ```sh
-uv pip install -e .
+uv sync --frozen
 ```
 
-CI currently mirrors a plain package install with:
-
-```sh
-python3 -m pip install .
-```
-
-Main runtime dependencies are declared in `setup.cfg`: `numpy`, `opencv-python`, `open3d`, `torch`, `torchvision`, and ONNX Runtime. `depthai` is optional and only needed for OAK-D camera input. `uv.lock` may be present in local worktrees; use it when maintaining a uv-managed environment, but do not churn it for unrelated source changes.
+Main runtime dependencies are declared in `pyproject.toml`: `numpy`, `opencv-python`, `open3d`, `torch`, `torchvision`, and ONNX Runtime. `depthai` is optional and only needed for OAK-D camera input; install it with `uv sync --extra oak` when needed. Keep `uv.lock` in sync when changing project dependencies, but do not churn it for unrelated source changes.
 
 ## Common Commands
 
@@ -83,10 +78,10 @@ uv run stereodemo --oak
 Build a release package:
 
 ```sh
-uv run --with build python -m build
+uv build
 ```
 
-For the project release flow, use `./build_release.sh` because it removes and recreates `stereodemo/datasets`, symlinks `datasets/oak-d` for package data, builds `dist/`, then removes the temporary package dataset folder. The script currently installs `build` with pip internally; keep that in mind if converting the release script to uv later.
+For the project release flow, use `./build_release.sh` because it removes and recreates `stereodemo/datasets`, symlinks `datasets/oak-d` for package data, builds `dist/` with `uv build`, then removes the temporary package dataset folder.
 
 ## Testing Notes
 
@@ -144,8 +139,8 @@ OAK-D support requires `depthai` and hardware access. Do not make OAK-D required
 
 ## Packaging and Release Notes
 
-Version numbers are duplicated in `setup.cfg` and `stereodemo/__init__.py`; update both for a release.
+Version numbers are duplicated in `pyproject.toml` and `stereodemo/__init__.py`; update both for a release.
 
-`MANIFEST.in` excludes most sample datasets from source distributions. `setup.cfg` package data expects `stereodemo/datasets/oak-d` to exist during release builds, which is why `build_release.sh` creates the temporary symlink.
+`MANIFEST.in` excludes most sample datasets from source distributions. `pyproject.toml` package data expects `stereodemo/datasets/oak-d` to exist during release builds, which is why `build_release.sh` creates the temporary symlink.
 
 Do not leave generated `stereodemo/datasets`, `build/`, `dist/`, or `*.egg-info/` changes in source edits unless the task is explicitly about release artifacts.
