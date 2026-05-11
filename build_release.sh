@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 set -e
 
@@ -8,5 +8,6 @@ trap 'rm -rf stereodemo/datasets' EXIT
 
 ln -sf ../../datasets/oak-d stereodemo/datasets/oak-d
 
+mkdir -p dist
 rm -f dist/*
 uv build
