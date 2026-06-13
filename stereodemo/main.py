@@ -84,7 +84,7 @@ class FileListSource (visualizer.Source):
                     continue
                 try:
                     right_f = file_or_dir_list.pop(0)
-                except:
+                except IndexError:
                     print (f"Missing right image for {f}, skipping")
                     continue
                 self.left_images_path.append(f)
@@ -157,8 +157,8 @@ def main():
         sys.stderr.write (f"Going to use the temporary directory {args.models_path} instead, specify --model-paths to specify a custom persistent path instead.\n")
         try:
             args.models_path.mkdir(parents=True, exist_ok=True)
-        except:
-            sys.stderr.write ("Could not create a temporary directory to store the downloaded models.\n")
+        except OSError as e:
+            sys.stderr.write (f"Could not create a temporary directory to store the downloaded models: {e}\n")
             sys.stderr.write ("Aborting, you need to specify --models-path with a valid writable path.\n")
             sys.exit (1)
     print (f"INFO: will store downloaded models in {args.models_path}")
