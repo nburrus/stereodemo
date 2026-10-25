@@ -25,7 +25,7 @@ Core code lives in `stereodemo/`. Sample datasets live in `datasets/`. Model con
 
 ## Environment Setup
 
-Use Python 3.8 or newer. CI currently uses Python 3.11.
+Use Python 3.11 or newer. CI currently uses Python 3.11.
 
 Prefer `uv` for local development. Create or update the environment with:
 

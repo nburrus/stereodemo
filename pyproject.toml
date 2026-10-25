@@ -10,7 +10,7 @@ name = "stereodemo"
 version = "0.7"
 description = "Compare various stereo depth estimation algorithms on image files or with an OAK-D camera."
 readme = "README.md"
-requires-python = ">=3.8,!=3.12.*" # 3.12 is not supported by onnxruntime
+requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
@@ -26,7 +26,8 @@ dependencies = [
     "onnxruntime-gpu>=1.10.0; sys_platform != 'darwin'",
     "opencv-python",
     "open3d>=0.15.1",
-    "torch>=1.11.0",
+    "pillow>=13.0.0",
+    "torch>=2.13.0",
     "torchvision",
     "einops",
 ]
